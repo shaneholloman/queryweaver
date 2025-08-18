@@ -233,6 +233,34 @@ class PostgresLoader(BaseLoader):
             if column_default:
                 description_parts.append(f"(Default: {column_default})")
 
+            # Count rows and distinct values for the column
+            cursor.execute(
+                f"""
+                SELECT COUNT(*) AS total_count,
+                       COUNT(DISTINCT {col_name}) AS distinct_count
+                FROM {table_name};
+                """
+            )
+            rows_count, distinct_count = cursor.fetchone()
+
+            max_rows = 500
+            max_distinct = 100
+
+            if 0 < rows_count < max_rows and distinct_count < max_distinct:
+                uniqueness_value = distinct_count / rows_count
+                if uniqueness_value < 0.5:
+                    cursor.execute(
+                        f"SELECT DISTINCT {col_name} FROM {table_name};"
+                    )
+                    distinct_values = [row[0] for row in cursor.fetchall() if row[0] is not None]
+                    if distinct_values:
+                        # Check first value type to avoid objects like dict/bytes
+                        first_val = distinct_values[0]
+                        if isinstance(first_val, (str, int, float)):
+                            description_parts.append(
+                                f"(Optional values: {', '.join(f'({str(v)})' for v in distinct_values)})"
+                            )
+
             columns_info[col_name] = {
                 'type': data_type,
                 'null': is_nullable,
@@ -240,6 +268,7 @@ class PostgresLoader(BaseLoader):
                 'description': ' '.join(description_parts),
                 'default': column_default
             }
+
 
         return columns_info
 

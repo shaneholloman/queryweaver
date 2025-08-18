@@ -17,8 +17,14 @@ generated value.
 clarification in that way he have the relevent information to answer.
 * When you ask the user to confirm a value, please provide the value in your answer.
 * Mention only question about values and dont mention the SQL query or the tables in your answer.
+* Use the explanation to understand what was unclear or ambiguous in the user's request.
+
+** Understand what the SQL does and ask the user if this is what they need with a clarification question. **
 
 Please create the clarification question step by step.
+
+Last agent explanation:
+{EXPLANATION}
 
 Question:
 {QUESTION}
@@ -42,11 +48,11 @@ class TaxonomyAgent:
     def __init__(self):
         """Initialize the taxonomy agent."""
 
-    def get_answer(self, question: str, sql: str) -> str:
+    def get_answer(self, question: str, sql: str, explanation: str) -> str:
         """Get taxonomy classification for a question and SQL pair."""
         messages = [
             {
-                "content": TAXONOMY_PROMPT.format(QUESTION=question, SQL=sql),
+                "content": TAXONOMY_PROMPT.format(QUESTION=question, SQL=sql, EXPLANATION=explanation),
                 "role": "user",
             }
         ]
