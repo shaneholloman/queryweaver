@@ -63,6 +63,80 @@ def list_graphs():
     return jsonify(filtered_graphs)
 
 
+@graphs_bp.route("/<string:graph_id>/data", methods=["GET"])
+@token_required
+def get_graph_data(graph_id: str):
+    """Return all nodes and edges for the specified graph (namespaced to the user).
+
+    This endpoint returns a JSON object with two keys: `nodes` and `edges`.
+    Nodes contain a minimal set of properties (id, name, labels, props).
+    Edges contain source and target node names (or internal ids), type and props.
+    """
+    if not graph_id or not isinstance(graph_id, str):
+        return jsonify({"error": "Invalid graph_id"}), 400
+
+    graph_id = graph_id.strip()[:200]
+    namespaced = g.user_id + "_" + graph_id
+
+    try:
+        graph = db.select_graph(namespaced)
+    except Exception as e:
+        logging.error("Failed to select graph %s: %s", namespaced, e)
+        return jsonify({"error": "Graph not found or database error"}), 404
+
+    # Build table nodes with columns and table-to-table links (foreign keys)
+    tables_query = """
+    MATCH (t:Table)
+    OPTIONAL MATCH (c:Column)-[:BELONGS_TO]->(t)
+    RETURN t.name AS table, collect(DISTINCT c.name) AS columns
+    """
+
+    links_query = """
+    MATCH (src_col:Column)-[:BELONGS_TO]->(src_table:Table),
+          (tgt_col:Column)-[:BELONGS_TO]->(tgt_table:Table),
+          (src_col)-[:REFERENCES]->(tgt_col)
+    RETURN DISTINCT src_table.name AS source, tgt_table.name AS target
+    """
+
+    try:
+        tables_res = graph.query(tables_query).result_set
+        links_res = graph.query(links_query).result_set
+    except Exception as e:
+        logging.error("Error querying graph data for %s: %s", namespaced, e)
+        return jsonify({"error": "Failed to read graph data"}), 500
+
+    nodes = []
+    for row in tables_res:
+        try:
+            table_name, columns = row
+        except Exception:
+            continue
+        # columns may contain nulls if no columns — normalize to empty list
+        if not isinstance(columns, list):
+            columns = [] if columns is None else [columns]
+
+        nodes.append({
+            "id": table_name,
+            "name": table_name,
+            "columns": columns,
+        })
+
+    links = []
+    seen = set()
+    for row in links_res:
+        try:
+            source, target = row
+        except Exception:
+            continue
+        key = (source, target)
+        if key in seen:
+            continue
+        seen.add(key)
+        links.append({"source": source, "target": target})
+
+    return jsonify({"nodes": nodes, "links": links})
+
+
 @graphs_bp.route("", methods=["POST"])
 @token_required
 def load_graph():

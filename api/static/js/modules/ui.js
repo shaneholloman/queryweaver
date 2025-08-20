@@ -4,7 +4,7 @@
 
 import { DOM } from './config.js';
 
-export function toggleContainer(container) {
+export function toggleContainer(container, onOpen) {
     // Check if we're on mobile (768px breakpoint to match CSS)
     const isMobile = window.innerWidth <= 768;
 
@@ -23,6 +23,9 @@ export function toggleContainer(container) {
         if (!isMobile) {
             DOM.chatContainer.style.paddingRight = '10%';
             DOM.chatContainer.style.paddingLeft = '10%';
+        }
+        if (onOpen) {
+            onOpen();
         }
     } else {
         container.classList.remove('open');

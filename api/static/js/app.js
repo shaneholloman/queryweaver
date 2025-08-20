@@ -17,6 +17,7 @@ import {
     handleWindowResize,
 } from './modules/ui.js';
 import { setupAuthenticationModal, setupDatabaseModal } from './modules/modals.js';
+import { showGraph } from './modules/schema.js';
 
 // Initialize the application
 function initializeApp() {
@@ -46,8 +47,40 @@ function setupEventListeners() {
     // Menu functionality
     DOM.menuButton.addEventListener('click', () => toggleContainer(DOM.menuContainer));
 
-    // Schema functionality
-    DOM.schemaButton.addEventListener('click', () => toggleContainer(DOM.schemaContainer));
+    // Schema functionality: fetch graph data for the selected graph when panel opens
+    DOM.schemaButton.addEventListener('click', () => {
+        toggleContainer(DOM.schemaContainer, async () => {
+            const selected = DOM.graphSelect.value;
+
+            // If no graph is selected
+            if (!selected) {
+                return;
+            }
+
+            try {
+                const resp = await fetch(`/graphs/${encodeURIComponent(selected)}/data`);
+                if (!resp.ok) {
+                    console.error('Failed to load graph data:', resp.status, resp.statusText);
+                    showGraph(myData);
+                    return;
+                }
+
+                const data = await resp.json();
+
+                // Basic validation of expected shape
+                if (!data || !Array.isArray(data.nodes) || !Array.isArray(data.links)) {
+                    console.warn('Graph data returned in unexpected shape, falling back to demo data', data);
+                    showGraph(myData);
+                    return;
+                }
+
+                showGraph(data);
+            } catch (err) {
+                console.error('Error fetching graph data:', err);
+                showGraph(myData);
+            }
+        });
+    });
 
     // Reset functionality
     DOM.newChatButton.addEventListener('click', showResetConfirmation);
