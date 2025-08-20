@@ -88,7 +88,7 @@ def get_graph_data(graph_id: str):
     tables_query = """
     MATCH (t:Table)
     OPTIONAL MATCH (c:Column)-[:BELONGS_TO]->(t)
-    RETURN t.name AS table, collect(DISTINCT c.name) AS columns
+    RETURN t.name AS table, collect(DISTINCT {name: c.name, type: c.type}) AS columns
     """
 
     links_query = """
@@ -111,14 +111,39 @@ def get_graph_data(graph_id: str):
             table_name, columns = row
         except Exception:
             continue
-        # columns may contain nulls if no columns — normalize to empty list
+        # Normalize columns: ensure a list of dicts with name/type
         if not isinstance(columns, list):
             columns = [] if columns is None else [columns]
+
+        normalized = []
+        for col in columns:
+            try:
+                # col may be a mapping-like object or a simple value
+                if not col:
+                    continue
+                # Some drivers may return a tuple or list for the collected map
+                if isinstance(col, (list, tuple)) and len(col) >= 2:
+                    # try to interpret as (name, type)
+                    name = col[0]
+                    ctype = col[1] if len(col) > 1 else None
+                elif isinstance(col, dict):
+                    name = col.get('name') or col.get('columnName')
+                    ctype = col.get('type') or col.get('dataType')
+                else:
+                    name = str(col)
+                    ctype = None
+
+                if not name:
+                    continue
+
+                normalized.append({"name": name, "type": ctype})
+            except Exception:
+                continue
 
         nodes.append({
             "id": table_name,
             "name": table_name,
-            "columns": columns,
+            "columns": normalized,
         })
 
     links = []

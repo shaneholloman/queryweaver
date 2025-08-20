@@ -19,6 +19,35 @@ import {
 import { setupAuthenticationModal, setupDatabaseModal } from './modules/modals.js';
 import { showGraph } from './modules/schema.js';
 
+// Shared helper: fetch graph data and call showGraph; falls back to empty message on error
+async function loadAndShowGraph(selected) {
+    if (!selected) {
+        return;
+    }
+    try {
+        const resp = await fetch(`/graphs/${encodeURIComponent(selected)}/data`);
+        if (!resp.ok) {
+            console.error('Failed to load graph data:', resp.status, resp.statusText);
+            return;
+        }
+
+        const data = await resp.json();
+
+        if (!data || !Array.isArray(data.nodes) || !Array.isArray(data.links)) {
+            console.warn('Graph data returned in unexpected shape, showing empty message', data);
+            return;
+        }
+
+        // Clear any existing placeholder content before rendering
+        const container = document.getElementById('schema-graph');
+        if (container) container.innerHTML = '';
+
+        showGraph(data);
+    } catch (err) {
+        console.error('Error fetching graph data:', err);
+    }
+}
+
 // Initialize the application
 function initializeApp() {
     // Initialize chat
@@ -57,28 +86,7 @@ function setupEventListeners() {
                 return;
             }
 
-            try {
-                const resp = await fetch(`/graphs/${encodeURIComponent(selected)}/data`);
-                if (!resp.ok) {
-                    console.error('Failed to load graph data:', resp.status, resp.statusText);
-                    showGraph(myData);
-                    return;
-                }
-
-                const data = await resp.json();
-
-                // Basic validation of expected shape
-                if (!data || !Array.isArray(data.nodes) || !Array.isArray(data.links)) {
-                    console.warn('Graph data returned in unexpected shape, falling back to demo data', data);
-                    showGraph(myData);
-                    return;
-                }
-
-                showGraph(data);
-            } catch (err) {
-                console.error('Error fetching graph data:', err);
-                showGraph(myData);
-            }
+            await loadAndShowGraph(selected);
         });
     });
 
@@ -102,7 +110,18 @@ function setupEventListeners() {
     });
 
     // Graph management
-    DOM.graphSelect.addEventListener("change", onGraphChange);
+    DOM.graphSelect.addEventListener("change", async () => {
+        // Preserve existing behavior
+        onGraphChange();
+
+        // If the schema panel is currently open, fetch and render the selected graph
+        const selected = DOM.graphSelect.value;
+        if (!selected) return;
+
+        if (DOM.schemaContainer && DOM.schemaContainer.classList.contains('open')) {
+            await loadAndShowGraph(selected);
+        }
+    });
     DOM.fileUpload.addEventListener('change', handleFileUpload);
 
     // Window resize handling
