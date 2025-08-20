@@ -302,6 +302,7 @@
   top: 0px;
   bottom: 0px;
   width: 48px;
+  left: 0px;
   background: var(--bg-tertiary, rgba(255,255,255,0.02));
   /* border-radius: 10px; */
   padding: 6px 6px;
@@ -378,21 +379,4 @@
   #left-toolbar-inner { flex-direction: row; gap: 6px; }
 }
 
-/* (analytics panel removed — schema panel is used instead) */
 
-/* Schema panel (empty placeholder) */
-#schema-panel {
-  position: fixed;
-  left: 76px;
-  top: 84px;
-  width: 420px;
-  background: var(--bg-primary, #121212);
-  border: 1px solid var(--border-color, rgba(255,255,255,0.04));
-  padding: 12px;
-  border-radius: 8px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-  display: none;
-  z-index: 1040;
-}
-
-#schema-panel.open { display: block; }

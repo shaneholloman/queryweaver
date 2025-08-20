@@ -3,6 +3,7 @@ export function showGraph(data) {
 
     const Graph = ForceGraph()(document.getElementById('schema-graph'))
         .graphData(data)
+        .nodeId('name')
         // Custom node renderer: draw table-like boxes with columns
         .nodeCanvasObject((node, ctx, globalScale) => {
             const nodeWidth = 160;
@@ -118,7 +119,7 @@ export function showGraph(data) {
     // Configure forces using d3 if available, otherwise leave defaults
     if (typeof d3 !== 'undefined' && typeof d3.forceManyBody === 'function') {
         Graph.d3Force('charge', d3.forceManyBody().strength(-900));
-        Graph.d3Force('link', d3.forceLink().id(d => d.id).distance(220).strength(0.9));
+        Graph.d3Force('link', d3.forceLink().id(d => d.name).distance(220).strength(0.9));
 
         // Add collision force to avoid overlap when available
         if (typeof d3.forceCollide === 'function') {

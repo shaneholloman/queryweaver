@@ -49,6 +49,12 @@ def sanitize_query(query: str) -> str:
     """Sanitize the query to prevent injection attacks."""
     return query.replace('\n', ' ').replace('\r', ' ')[:500]
 
+def sanitize_log_input(value: str) -> str:
+    """Sanitize input for safe logging (remove newlines and carriage returns)."""
+    if not isinstance(value, str):
+        return str(value)
+    return value.replace('\n', ' ').replace('\r', ' ')
+
 @graphs_bp.route("")
 @token_required
 def list_graphs():
@@ -81,7 +87,7 @@ def get_graph_data(graph_id: str):
     try:
         graph = db.select_graph(namespaced)
     except Exception as e:
-        logging.error("Failed to select graph %s: %s", namespaced, e)
+        logging.error("Failed to select graph %s: %s", sanitize_log_input(namespaced), e)
         return jsonify({"error": "Graph not found or database error"}), 404
 
     # Build table nodes with columns and table-to-table links (foreign keys)
@@ -102,7 +108,7 @@ def get_graph_data(graph_id: str):
         tables_res = graph.query(tables_query).result_set
         links_res = graph.query(links_query).result_set
     except Exception as e:
-        logging.error("Error querying graph data for %s: %s", namespaced, e)
+        logging.error("Error querying graph data for %s: %s", sanitize_log_input(namespaced), e)
         return jsonify({"error": "Failed to read graph data"}), 500
 
     nodes = []

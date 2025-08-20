@@ -164,7 +164,7 @@
 }
 
 /* Graph canvas container inside schema sidebar */
-#graph {
+#schema-graph {
   width: 100%;
   height: 60vh; /* allow graph to take most of the sidebar height */
   min-height: 300px;
@@ -173,7 +173,7 @@
 }
 
 /* Ensure canvas inside ForceGraph fills the container */
-.force-graph-container, #graph > canvas {
+.force-graph-container, #schema-graph > canvas {
   width: 100% !important;
   height: 100% !important;
 }
