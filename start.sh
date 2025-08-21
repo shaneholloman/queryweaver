@@ -18,9 +18,9 @@ done
 
 
 echo "FalkorDB is up - launching FastAPI..."
-# Determine whether to run in reload (debug) mode. The project uses FLASK_DEBUG
+# Determine whether to run in reload (debug) mode. The project uses FASTAPI_DEBUG
 # environment variable historically; keep compatibility by honoring it here.
-if [ "${FLASK_DEBUG:-False}" = "True" ] || [ "${FLASK_DEBUG:-true}" = "true" ]; then
+if [ "${FASTAPI_DEBUG:-False}" = "True" ] || [ "${FASTAPI_DEBUG:-true}" = "true" ]; then
   RELOAD_FLAG="--reload"
 else
   RELOAD_FLAG=""
