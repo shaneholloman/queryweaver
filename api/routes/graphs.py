@@ -1,5 +1,6 @@
 """Graph-related routes for the text2sql API."""
 
+import asyncio
 import json
 import logging
 import time
@@ -290,6 +291,9 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
         yield json.dumps(step) + MESSAGE_DELIMITER
         # Ensure the database description is loaded
         db_description, db_url = await get_db_description(graph_id)
+        task = asyncio.create_task(find(graph_id, queries_history, db_description))
+        await asyncio.sleep(0)
+
 
         # Determine database type and get appropriate loader
         db_type, loader_class = get_database_type_and_loader(db_url)
@@ -318,32 +322,7 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
             step1_elapsed = time.perf_counter() - step1_start
             logging.info("Step 1 (relevancy + prep) took %.2f seconds", step1_elapsed)
         else:
-            # Use a thread pool to enforce timeout
-            with ThreadPoolExecutor(max_workers=1) as executor:
-                find_start = time.perf_counter()
-                future = executor.submit(find, graph_id, queries_history, db_description)
-                try:
-                    _, result, _ = future.result(timeout=120)
-                    find_elapsed = time.perf_counter() - find_start
-                    logging.info("Finding relevant tables took %.2f seconds", find_elapsed)
-                    # Total time for the pre-analysis phase
-                    step1_elapsed = time.perf_counter() - step1_start
-                    logging.info("Step 1 (relevancy + table finding) took %.2f seconds", step1_elapsed)
-                except FuturesTimeoutError:
-                    yield json.dumps(
-                        {
-                            "type": "error",
-                            "message": ("Timeout error while finding tables relevant to "
-                                       "your request."),
-                        }
-                    ) + MESSAGE_DELIMITER
-                    return
-                except Exception as e:
-                    logging.info("Error in find function: %s", e)
-                    yield json.dumps(
-                        {"type": "error", "message": "Error in find function"}
-                    ) + MESSAGE_DELIMITER
-                    return
+            result = await task
 
             logging.info("Calling to analysis agent with query: %s",
                          sanitize_query(queries_history[-1]))
