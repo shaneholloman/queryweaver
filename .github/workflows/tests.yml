@@ -41,6 +41,13 @@ jobs:
       run: |
         pipenv sync --dev
 
+    - name: Install frontend dependencies
+      if: "exists('app/package.json')"
+      run: |
+        node --version || true
+        npm --version || true
+        (cd app && npm ci)
+
     - name: Create test environment file
       run: |
         cp .env.example .env
@@ -54,6 +61,11 @@ jobs:
     - name: Run pylint
       run: |
         pipenv run pylint "$(git ls-files '*.py')" || true
+
+    - name: Run frontend lint
+      if: "exists('app/package.json')"
+      run: |
+        (cd app && npm run lint)
 
   e2e-tests:
     runs-on: ubuntu-latest

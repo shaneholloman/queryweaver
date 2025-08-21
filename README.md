@@ -15,6 +15,8 @@ QueryWeaver is an open-source Text2SQL tool that transforms natural language int
 - pipenv (for dependency management)
 - FalkorDB instance
 
+- Node.js and npm (required for frontend TypeScript build)
+
 ### Installation
 
 1. Clone the repository
@@ -59,6 +61,25 @@ pipenv run flask --app api.index run
 ```
 
 The application will be available at `http://localhost:5000`.
+
+## Frontend build
+
+The project includes a TypeScript frontend located in the `app/` folder. Build the frontend before running the app in production or after modifying frontend source files.
+
+Install frontend deps and build (recommended):
+
+```bash
+make install   # installs backend and frontend deps
+make build-prod     # runs the frontend production build (produces app/public/js/app.js)
+```
+
+Or run directly from the `app/` folder:
+
+```bash
+cd app
+npm ci
+npm run build
+```
 
 ### Running with Docker
 

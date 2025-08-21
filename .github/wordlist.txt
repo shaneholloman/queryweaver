@@ -36,3 +36,11 @@ README
 md
 UI
 env
+
+
+TypeScript
+frontend
+Frontend
+js
+npm
+deps

@@ -34,6 +34,8 @@ cp .env.example .env
 # Edit .env with required values (see Environment Setup section)
 ```
 
+Note: This project includes a TypeScript frontend in `app/` that must be built before a production run. Node.js and npm are required for the frontend build; `make install` will attempt to install frontend deps in `app/` when present. After `make install`, run `make build-prod` (or `cd app && npm run build`) to compile the TypeScript into the static bundle (build output: `app/public/js/app.js`).
+
 ### 2. Development Environment Setup
 ```bash
 # Complete development setup (includes Playwright browsers)
@@ -85,6 +87,8 @@ make run-dev
 make run-prod
 # OR manually: pipenv run flask --app api.index run
 ```
+
+Important: If you're preparing a production deployment or have changed frontend code, run `make build-prod` (or `make build-dev` for a development build) first to produce the static bundle used by the app.
 
 ### 5a. Running with Docker
 

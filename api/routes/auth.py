@@ -4,7 +4,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Optional, Dict, Any
+from urllib.parse import urljoin
 
 import httpx
 from fastapi import APIRouter, Request, HTTPException, status
@@ -12,13 +12,12 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from authlib.common.errors import AuthlibBaseError
 from starlette.config import Config
-from urllib.parse import urljoin
 
 from api.auth.user_management import validate_and_cache_user
 
 # Router
 auth_router = APIRouter()
-TEMPLATES_DIR = str((Path(__file__).resolve().parents[1] / "templates").resolve())
+TEMPLATES_DIR = str((Path(__file__).resolve().parents[1] / "../app/templates").resolve())
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 # ---- Helpers ----
@@ -33,12 +32,23 @@ def _get_provider_client(request: Request, provider: str):
         raise HTTPException(status_code=500, detail=f"OAuth provider {provider} not configured")
     return client
 
-
 def _clear_auth_session(session: dict):
     """Remove only auth-related keys from session instead of clearing everything."""
     for key in ["user_info", "google_token", "github_token", "token_validated_at", "oauth_google_auth"]:
         session.pop(key, None)
 
+@auth_router.get("/chat", name="auth.chat", response_class=HTMLResponse)
+async def chat(request: Request) -> HTMLResponse:
+    """Explicit chat route (renders main chat UI)."""
+    user_info, is_authenticated = await validate_and_cache_user(request)
+    return templates.TemplateResponse(
+        "chat.j2",
+        {
+            "request": request,
+            "is_authenticated": is_authenticated,
+            "user_info": user_info,
+        },
+    )
 
 def _build_callback_url(request: Request, path: str) -> str:
     """Build absolute callback URL, honoring OAUTH_BASE_URL if provided."""
@@ -56,6 +66,16 @@ async def home(request: Request) -> HTMLResponse:
     if not is_authenticated_flag:
         _clear_auth_session(request.session)
 
+    if not is_authenticated_flag:
+        return templates.TemplateResponse(
+            "landing.j2", 
+            {
+                "request": request, 
+                "is_authenticated": False, 
+                "user_info": None
+            }
+        )
+
     return templates.TemplateResponse(
         "chat.j2",
         {
@@ -71,7 +91,7 @@ async def login_page(_: Request) -> RedirectResponse:
     return RedirectResponse(url="/login/google", status_code=status.HTTP_302_FOUND)
 
 
-@auth_router.get("/login/google", response_class=RedirectResponse)
+@auth_router.get("/login/google", name="google.login", response_class=RedirectResponse)
 async def login_google(request: Request) -> RedirectResponse:
     google = _get_provider_client(request, "google")
     redirect_uri = _build_callback_url(request, "login/google/authorized")
@@ -131,7 +151,7 @@ async def google_callback_compat(request: Request) -> RedirectResponse:
     return RedirectResponse(url=f"/login/google/authorized{qs}", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
 
-@auth_router.get("/login/github", response_class=RedirectResponse)
+@auth_router.get("/login/github",  name="github.login", response_class=RedirectResponse)
 async def login_github(request: Request) -> RedirectResponse:
     github = _get_provider_client(request, "github")
     redirect_uri = _build_callback_url(request, "login/github/authorized")

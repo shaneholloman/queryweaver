@@ -3,15 +3,13 @@
 import logging
 import os
 import secrets
-from typing import Any
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, HTTPException, status
-from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
-from authlib.integrations.starlette_client import OAuth
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from api.auth.oauth_handlers import setup_oauth_handlers
@@ -26,9 +24,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 
 class SecurityMiddleware(BaseHTTPMiddleware):
     """Middleware for security checks including static file access"""
-    
+
     STATIC_PREFIX = '/static/'
-    
+
     async def dispatch(self, request: Request, call_next):
         # Block directory access in static files
         if request.url.path.startswith(self.STATIC_PREFIX):
@@ -45,7 +43,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 def create_app():
     """Create and configure the FastAPI application."""
     app = FastAPI(title="QueryWeaver", description="Text2SQL with Graph-Powered Schema Understanding")
-    
+
     # Get secret key for sessions
     secret_key = os.getenv("FLASK_SECRET_KEY")
     if not secret_key:
@@ -65,11 +63,8 @@ def create_app():
     # Add security middleware
     app.add_middleware(SecurityMiddleware)
 
-    # Setup templates (routes use their own Jinja2Templates pointing to api/templates)
-    Jinja2Templates(directory="api/templates")
-    
     # Mount static files
-    static_path = os.path.join(os.path.dirname(__file__), "static")
+    static_path = os.path.join(os.path.dirname(__file__), "../app/public")
     if os.path.exists(static_path):
         app.mount("/static", StaticFiles(directory=static_path), name="static")
 
