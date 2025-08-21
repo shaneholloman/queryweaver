@@ -42,7 +42,6 @@ jobs:
         pipenv sync --dev
 
     - name: Install frontend dependencies
-      if: "exists('app/package.json')"
       run: |
         node --version || true
         npm --version || true
@@ -58,14 +57,9 @@ jobs:
       run: |
         pipenv run pytest tests/ -k "not e2e" --verbose
 
-    - name: Run pylint
+    - name: Run lint
       run: |
-        pipenv run pylint "$(git ls-files '*.py')" || true
-
-    - name: Run frontend lint
-      if: "exists('app/package.json')"
-      run: |
-        (cd app && npm run lint)
+        make lint
 
   e2e-tests:
     runs-on: ubuntu-latest
