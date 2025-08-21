@@ -8,7 +8,7 @@ class TestSimpleIntegration:
     """Simple integration tests using requests."""
 
     def test_app_starts_successfully(self, app_url):
-        """Test that the Flask application starts and responds."""
+        """Test that the FastAPI application starts and responds."""
         response = requests.get(app_url, timeout=10)
         assert response.status_code == 200
 
@@ -28,4 +28,4 @@ class TestSimpleIntegration:
         # Try to access static directory
         response = requests.get(f"{app_url}/static/", timeout=10)
         # Should either return content or various error codes, but app should respond
-        assert response.status_code in [405]
+        assert response.status_code in [403]
