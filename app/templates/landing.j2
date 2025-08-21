@@ -7,6 +7,13 @@
 {% endblock %}
 
 {% block content %}
+<!-- Top header with logo -->
+<header class="site-header" role="banner">
+  <div class="site-header-inner">
+      <img src="{{ url_for('static', path='icons/queryweaver.webp') }}" alt="QueryWeaver" />
+  </div>
+</header>
+
 <div class="landing-container">
 
   <!-- Left hero -->
@@ -123,7 +130,6 @@
               clearInterval(typingTimer);
               typingTimer = null;
               sEl.classList.remove('typing');
-              // ensure full highlighted SQL is rendered
               if (sEl) sEl.innerHTML = highlightSQL(text);
               // show success when typing completes
               if (successEl) successEl.style.display = 'flex';
