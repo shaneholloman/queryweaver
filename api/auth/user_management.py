@@ -32,7 +32,7 @@ def ensure_user_in_organizations(provider_user_id, email, name, provider, pictur
         return False, None
 
     # Validate provider is in allowed list
-    allowed_providers = ["google", "github"]
+    allowed_providers = ["google", "github", "email"]
     if provider not in allowed_providers:
         logging.error("Invalid provider: %s", provider)
         return False, None
@@ -133,7 +133,7 @@ def update_identity_last_login(provider, provider_user_id):
         return
 
     # Validate provider is in allowed list
-    allowed_providers = ["google", "github"]
+    allowed_providers = ["google", "github", "email"]
     if provider not in allowed_providers:
         logging.error("Invalid provider: %s", provider)
         return
@@ -266,6 +266,17 @@ async def validate_and_cache_user(request: Request) -> Tuple[Optional[Dict[str, 
             except Exception as e:
                 logging.warning("GitHub OAuth validation error: %s", e)
                 request.session.pop("github_token", None)
+                request.session.pop("user_info", None)
+
+        # ---- Email Authentication ----
+        email_authenticated = request.session.get("email_authenticated")
+        if email_authenticated and user_info:
+            # For email auth, we trust the session if it exists and is recent
+            if (current_time - token_validated_at) < 3600:  # 1 hour for email auth
+                return user_info, True
+            else:
+                # Session expired, require re-login
+                request.session.pop("email_authenticated", None)
                 request.session.pop("user_info", None)
 
         # No valid auth

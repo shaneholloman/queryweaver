@@ -4,17 +4,194 @@
 
 export function setupAuthenticationModal() {
     const isAuthenticated = (window as any).isAuthenticated !== undefined ? (window as any).isAuthenticated : false;
-    const googleLoginModal = document.getElementById('google-login-modal') as HTMLElement | null;
+    const loginModal = document.getElementById('login-modal') as HTMLElement | null;
+    const signupModal = document.getElementById('signup-modal') as HTMLElement | null;
     const container = document.getElementById('container') as HTMLElement | null;
 
-    if (googleLoginModal && container) {
+    if (loginModal && container) {
         if (!isAuthenticated) {
-            googleLoginModal.style.display = 'flex';
+            loginModal.style.display = 'flex';
             container.style.filter = 'blur(2px)';
         } else {
-            googleLoginModal.style.display = 'none';
+            loginModal.style.display = 'none';
             container.style.filter = '';
         }
+    }
+
+    // Setup modal switching
+    const showSignupBtn = document.getElementById('show-signup-modal') as HTMLElement | null;
+    const showLoginBtn = document.getElementById('show-login-modal') as HTMLElement | null;
+
+    if (showSignupBtn && loginModal && signupModal) {
+        showSignupBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginModal.style.display = 'none';
+            signupModal.style.display = 'flex';
+        });
+    }
+
+    if (showLoginBtn && loginModal && signupModal) {
+        showLoginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            signupModal.style.display = 'none';
+            loginModal.style.display = 'flex';
+        });
+    }
+
+    // Setup email login form
+    const emailLoginForm = document.getElementById('email-login-form') as HTMLFormElement | null;
+    if (emailLoginForm) {
+        emailLoginForm.addEventListener('submit', handleEmailLogin);
+    }
+
+    // Setup email signup form
+    const emailSignupForm = document.getElementById('email-signup-form') as HTMLFormElement | null;
+    if (emailSignupForm) {
+        emailSignupForm.addEventListener('submit', handleEmailSignup);
+    }
+
+    // Close modals on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (loginModal && loginModal.style.display === 'flex') {
+                // Don't close login modal on escape if user is not authenticated
+                if (isAuthenticated) {
+                    loginModal.style.display = 'none';
+                    if (container) container.style.filter = '';
+                }
+            }
+            if (signupModal && signupModal.style.display === 'flex') {
+                signupModal.style.display = 'none';
+                if (loginModal) loginModal.style.display = 'flex';
+            }
+        }
+    });
+}
+
+async function handleEmailLogin(e: Event) {
+    e.preventDefault();
+    
+    const form = e.target as HTMLFormElement;
+    const submitBtn = form.querySelector('.email-login-btn') as HTMLButtonElement;
+    const emailInput = document.getElementById('login-email') as HTMLInputElement;
+    const passwordInput = document.getElementById('login-password') as HTMLInputElement;
+
+    if (!emailInput || !passwordInput || !submitBtn) return;
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!email || !password) {
+        alert('Please fill in all fields');
+        return;
+    }
+
+    // Set loading state
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing in...';
+
+    try {
+        const response = await fetch('/email-login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Reload page to update authentication state
+            window.location.reload();
+        } else {
+            alert(data.error || 'Login failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('An error occurred during login. Please try again.');
+    } finally {
+        // Reset button state
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign in with Email';
+    }
+}
+
+async function handleEmailSignup(e: Event) {
+    e.preventDefault();
+    
+    const form = e.target as HTMLFormElement;
+    const submitBtn = form.querySelector('.email-signup-btn') as HTMLButtonElement;
+    const firstNameInput = document.getElementById('signup-firstname') as HTMLInputElement;
+    const lastNameInput = document.getElementById('signup-lastname') as HTMLInputElement;
+    const emailInput = document.getElementById('signup-email') as HTMLInputElement;
+    const passwordInput = document.getElementById('signup-password') as HTMLInputElement;
+    const repeatPasswordInput = document.getElementById('signup-repeat-password') as HTMLInputElement;
+
+    if (!firstNameInput || !lastNameInput || !emailInput || !passwordInput || !repeatPasswordInput || !submitBtn) return;
+
+    const firstName = firstNameInput.value.trim();
+    const lastName = lastNameInput.value.trim();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    const repeatPassword = repeatPasswordInput.value;
+
+    if (!firstName || !lastName || !email || !password || !repeatPassword) {
+        alert('Please fill in all fields');
+        return;
+    }
+
+    if (password !== repeatPassword) {
+        alert('Passwords do not match');
+        return;
+    }
+
+    if (password.length < 8) {
+        alert('Password must be at least 8 characters long');
+        return;
+    }
+
+    // Set loading state
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating account...';
+
+    try {
+        const response = await fetch('/email-signup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                firstName,
+                lastName,
+                email,
+                password,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert('Account created successfully! Please sign in.');
+            // Switch to login modal
+            const signupModal = document.getElementById('signup-modal') as HTMLElement | null;
+            const loginModal = document.getElementById('login-modal') as HTMLElement | null;
+            if (signupModal && loginModal) {
+                signupModal.style.display = 'none';
+                loginModal.style.display = 'flex';
+            }
+            // Clear form
+            form.reset();
+        } else {
+            alert(data.error || 'Signup failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Signup error:', error);
+        alert('An error occurred during signup. Please try again.');
+    } finally {
+        // Reset button state
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign up';
     }
 }
 
