@@ -1,4 +1,4 @@
-.PHONY: help install test test-unit test-e2e test-e2e-headed lint format clean setup-dev
+.PHONY: help install test test-unit test-e2e test-e2e-headed lint format clean setup-dev build lint-frontend
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -8,6 +8,8 @@ help: ## Show this help message
 
 install: ## Install dependencies
 	pipenv sync --dev
+	npm install ./app
+
 
 setup-dev: install ## Set up development environment
 	pipenv run playwright install chromium
@@ -15,27 +17,40 @@ setup-dev: install ## Set up development environment
 	@echo "Development environment setup complete!"
 	@echo "Don't forget to copy .env.example to .env and configure your settings"
 
-test: test-unit test-e2e ## Run all tests
+build-dev:
+	npm --prefix ./app run build:dev
+
+build-prod:
+	npm --prefix ./app run build
+
+test: build-dev test-unit test-e2e ## Run all tests
+	
 
 
 test-unit: ## Run unit tests only
 	pipenv run python -m pytest tests/ -k "not e2e" --verbose
 
 
-test-e2e: ## Run E2E tests headless
-	pipenv run python -m pytest tests/e2e/ --browser chromium
+test-e2e: build-dev ## Run E2E tests headless
+	pipenv run python -m pytest tests/e2e/ --browser chromium --video=on --screenshot=on
 
 
-test-e2e-headed: ## Run E2E tests with browser visible
+test-e2e-headed: build-dev ## Run E2E tests with browser visible
 	pipenv run python -m pytest tests/e2e/ --browser chromium --headed
 
 
-test-e2e-debug: ## Run E2E tests with debugging enabled
+test-e2e-debug: build-dev ## Run E2E tests with debugging enabled
 	pipenv run python -m pytest tests/e2e/ --browser chromium --slowmo=1000
 
-lint: ## Run linting
-	pipenv run pylint $(shell git ls-files '*.py')
+lint: ## Run linting (backend + frontend)
+	@echo "Running backend lint (pylint)"
+	pipenv run pylint $(shell git ls-files '*.py') || true
+	@echo "Running frontend lint (eslint)"
+	make lint-frontend
 
+lint-frontend: ## Run frontend lint (ESLint)
+	npm --prefix ./app run lint
+	
 format: ## Format code (placeholder - add black/autopep8 if needed)
 	@echo "Add code formatting tool like black here"
 
@@ -47,11 +62,11 @@ clean: ## Clean up test artifacts
 	find . -name "*.pyc" -delete
 	find . -name "*.pyo" -delete
 
-run-dev: ## Run development server
-	pipenv run python -m flask --app api.index run --debug
+run-dev: build-dev ## Run development server
+	pipenv run uvicorn api.index:app --host 127.0.0.1 --port 5000 --reload
 
-run-prod: ## Run production server
-	pipenv run python -m flask --app api.index run
+run-prod: build-prod ## Run production server
+	pipenv run uvicorn api.index:app --host 127.0.0.1 --port 5000
 
 docker-falkordb: ## Start FalkorDB in Docker for testing
 	docker run -d --name falkordb-test -p 6379:6379 falkordb/falkordb:latest

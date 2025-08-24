@@ -6,8 +6,10 @@ import logging
 import re
 from typing import Tuple, Dict, Any, List
 
-import mysql.connector
 import tqdm
+import pymysql
+from pymysql.cursors import DictCursor
+
 
 from api.loaders.base_loader import BaseLoader
 from api.loaders.graph_loader import load_to_graph
@@ -108,7 +110,10 @@ class MySQLLoader(BaseLoader):
         if connection_url.startswith('mysql://'):
             url = connection_url[8:]
         else:
-            raise ValueError("Invalid MySQL URL format. Expected mysql://username:password@host:port/database")
+            raise ValueError(
+                "Invalid MySQL URL format. Expected "
+                "mysql://username:password@host:port/database"
+            )
 
         # Parse components
         if '@' not in url:
@@ -163,8 +168,8 @@ class MySQLLoader(BaseLoader):
             conn_params = MySQLLoader._parse_mysql_url(connection_url)
 
             # Connect to MySQL database
-            conn = mysql.connector.connect(**conn_params)
-            cursor = conn.cursor(dictionary=True)
+            conn = pymysql.connect(**conn_params)
+            cursor = conn.cursor(DictCursor)
 
             # Get database name
             db_name = conn_params['database']
@@ -186,7 +191,7 @@ class MySQLLoader(BaseLoader):
             return True, (f"MySQL schema loaded successfully. "
                          f"Found {len(entities)} tables.")
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
             return False, f"MySQL connection error: {str(e)}"
         except Exception as e:
             return False, f"Error loading MySQL schema: {str(e)}"
@@ -498,7 +503,7 @@ class MySQLLoader(BaseLoader):
             conn_params = MySQLLoader._parse_mysql_url(db_url)
 
             # Connect to MySQL database
-            conn = mysql.connector.connect(**conn_params)
+            conn = pymysql.connect(**conn_params)
             cursor = conn.cursor(dictionary=True)
 
             # Execute the SQL query
@@ -544,7 +549,13 @@ class MySQLLoader(BaseLoader):
 
             return result_list
 
-        except mysql.connector.Error as e:
+        except pymysql.MySQLError as e:
+            # Rollback in case of error
+            if 'conn' in locals():
+                conn.rollback()
+                cursor.close()
+                conn.close()
+        except pymysql.MySQLError as e:
             # Rollback in case of error
             if 'conn' in locals():
                 conn.rollback()

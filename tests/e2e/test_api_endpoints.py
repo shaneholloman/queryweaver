@@ -1,6 +1,8 @@
 """
 Test API endpoints functionality.
 """
+import time
+
 import pytest
 import requests
 
@@ -27,7 +29,7 @@ class TestAPIEndpoints:
 
         # Test CSS files (if any)
         response = requests.get(f"{app_url}/static/css/", timeout=10)
-        assert response.status_code in [405]  # Various acceptable responses
+        assert response.status_code in [403]  # Various acceptable responses
 
     def test_login_endpoints(self, app_url):
         """Test login endpoints."""
@@ -73,7 +75,6 @@ class TestAPIEndpoints:
 
     def test_response_times(self, app_url):
         """Test that response times are reasonable."""
-        import time
 
         start_time = time.time()
         response = requests.get(app_url, timeout=10)

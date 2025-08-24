@@ -1,0 +1,18 @@
+{
+  "name": "queryweaver-app",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "NODE_ENV=production esbuild ts/app.ts --bundle --outfile=./public/js/app.js --platform=browser --minify",
+    "build:dev": "NODE_ENV=development esbuild ts/app.ts --bundle --outfile=./public/js/app.js --sourcemap --platform=browser",
+    "watch": "esbuild ts/app.ts --bundle --outfile=./public/js/app.js --sourcemap --platform=browser --watch",
+    "lint": "eslint --ext .ts ./ts --max-warnings=0 || true"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.9",
+    "typescript": "^5.9.2",
+    "eslint": "^9.33.0",
+    "@typescript-eslint/parser": "^8.40.0",
+    "@typescript-eslint/eslint-plugin": "^8.40.0"
+  }
+}

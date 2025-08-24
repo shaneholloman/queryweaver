@@ -5,7 +5,13 @@
 
 version: 2
 updates:
-  - package-ecosystem: "pip" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "pip"
+    directory: "/"
+    target-branch: "staging"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "npm"
+    directory: "/app"
+    target-branch: "staging"
     schedule:
       interval: "weekly"
