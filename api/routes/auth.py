@@ -11,6 +11,7 @@ from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from authlib.common.errors import AuthlibBaseError
+from authlib.integrations.starlette_client import OAuth
 from starlette.config import Config
 
 from api.auth.user_management import validate_and_cache_user
@@ -280,8 +281,8 @@ async def logout(request: Request) -> RedirectResponse:
 # ---- Hook for app factory ----
 def init_auth(app):
     """Initialize OAuth and sessions for the app."""
-    config = Config(".env")
-    from authlib.integrations.starlette_client import OAuth
+
+    config = Config(environ=os.environ)
     oauth = OAuth(config)
 
     google_client_id = os.getenv("GOOGLE_CLIENT_ID")
