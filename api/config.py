@@ -3,8 +3,6 @@
 This module contains the configuration for the text2sql module.
 """
 
-
-
 import dataclasses
 from typing import Union
 
