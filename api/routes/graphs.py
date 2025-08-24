@@ -282,6 +282,10 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
 
     # Create a generator function for streaming
     async def generate():
+        # Start overall timing
+        overall_start = time.perf_counter()
+        logging.info("Starting query processing pipeline for query: %s", sanitize_query(queries_history[-1]))
+        
         agent_rel = RelevancyAgent(queries_history, result_history)
         agent_an = AnalysisAgent(queries_history, result_history)
         step1_start = time.perf_counter()
@@ -290,28 +294,46 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
                 "message": "Step 1: Analyzing user query and generating SQL..."}
         yield json.dumps(step) + MESSAGE_DELIMITER
         # Ensure the database description is loaded
+        db_prep_start = time.perf_counter()
         db_description, db_url = await get_db_description(graph_id)
-        task = asyncio.create_task(find(graph_id, queries_history, db_description))
-        await asyncio.sleep(0)
-
-
+        
         # Determine database type and get appropriate loader
         db_type, loader_class = get_database_type_and_loader(db_url)
+        db_prep_elapsed = time.perf_counter() - db_prep_start
+        logging.info("Database preparation took %.2f seconds", db_prep_elapsed)
 
         if not loader_class:
+            overall_elapsed = time.perf_counter() - overall_start
+            logging.info("Query processing failed (no loader) - Total time: %.2f seconds", overall_elapsed)
             yield json.dumps({
                 "type": "error", 
                 "message": "Unable to determine database type"
             }) + MESSAGE_DELIMITER
             return
 
-        logging.info("Calling to relevancy agent with query: %s",
-                     sanitize_query(queries_history[-1]))
+        # Start both tasks concurrently
+        find_task = asyncio.create_task(find(graph_id, queries_history, db_description))
+
+        relevancy_task = asyncio.create_task(agent_rel.get_answer(
+            queries_history[-1], db_description
+        ))
+
+        logging.info("Starting relevancy check and graph analysis concurrently")
         rel_start = time.perf_counter()
-        answer_rel = agent_rel.get_answer(queries_history[-1], db_description)
+        
+        # Wait for relevancy check first
+        answer_rel = await relevancy_task
         rel_elapsed = time.perf_counter() - rel_start
         logging.info("Relevancy check took %.2f seconds", rel_elapsed)
+        
         if answer_rel["status"] != "On-topic":
+            # Cancel the find task since query is off-topic
+            find_task.cancel()
+            try:
+                await find_task
+            except asyncio.CancelledError:
+                logging.info("Find task cancelled due to off-topic query")
+            
             step = {
                 "type": "followup_questions",
                 "message": "Off topic question: " + answer_rel["reason"],
@@ -320,13 +342,17 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
             yield json.dumps(step) + MESSAGE_DELIMITER
             # Total time for the pre-analysis phase
             step1_elapsed = time.perf_counter() - step1_start
+            overall_elapsed = time.perf_counter() - overall_start
             logging.info("Step 1 (relevancy + prep) took %.2f seconds", step1_elapsed)
+            logging.info("Query processing completed (off-topic) - Total time: %.2f seconds", overall_elapsed)
         else:
-            result = await task
+            # Query is on-topic, wait for find results
+            find_start = time.perf_counter()
+            result = await find_task
+            find_elapsed = time.perf_counter() - find_start
+            logging.info("Graph analysis (find) took %.2f seconds", find_elapsed)
 
-            logging.info("Calling to analysis agent with query: %s",
-                         sanitize_query(queries_history[-1]))
-
+            logging.info("Starting SQL generation with analysis agent")
             analysis_start = time.perf_counter()
             answer_an = agent_an.get_analysis(
                 queries_history[-1], result, db_description, instructions
@@ -334,7 +360,7 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
             analysis_elapsed = time.perf_counter() - analysis_start
             logging.info("SQL generation took %.2f seconds", analysis_elapsed)
 
-            logging.info("SQL Result: %s", answer_an['sql_query'])
+            logging.info("Generated SQL query: %s", answer_an['sql_query'])
             yield json.dumps(
                 {
                     "type": "final_result",
@@ -399,6 +425,9 @@ What this will do:
                             "operation_type": sql_type
                         }
                     ) + MESSAGE_DELIMITER
+                    # Log timing for destructive operation that requires confirmation
+                    overall_elapsed = time.perf_counter() - overall_start
+                    logging.info("Query processing halted for confirmation - Time until confirmation: %.2f seconds", overall_elapsed)
                     return  # Stop here and wait for user confirmation
 
                 try:
@@ -406,11 +435,18 @@ What this will do:
                     yield json.dumps(step) + MESSAGE_DELIMITER
 
                     # Check if this query modifies the database schema using the appropriate loader
+                    schema_check_start = time.perf_counter()
                     is_schema_modifying, operation_type = (
                         loader_class.is_schema_modifying_query(sql_query)
                     )
+                    schema_check_elapsed = time.perf_counter() - schema_check_start
+                    logging.info("Schema modification check took %.2f seconds", schema_check_elapsed)
 
+                    sql_exec_start = time.perf_counter()
                     query_results = loader_class.execute_sql_query(answer_an["sql_query"], db_url)
+                    sql_exec_elapsed = time.perf_counter() - sql_exec_start
+                    logging.info("SQL query execution took %.2f seconds", sql_exec_elapsed)
+                    
                     yield json.dumps(
                         {
                             "type": "query_result",
@@ -425,9 +461,12 @@ What this will do:
                                          "refreshing graph...")}
                         yield json.dumps(step) + MESSAGE_DELIMITER
 
+                        refresh_start = time.perf_counter()
                         refresh_result = loader_class.refresh_graph_schema(
                             graph_id, db_url)
                         refresh_success, refresh_message = refresh_result
+                        refresh_elapsed = time.perf_counter() - refresh_start
+                        logging.info("Schema refresh took %.2f seconds", refresh_elapsed)
 
                         if refresh_success:
                             refresh_msg = (f"✅ Schema change detected "
@@ -459,6 +498,7 @@ What this will do:
                            "message": f"Step {step_num}: Generating user-friendly response"}
                     yield json.dumps(step) + MESSAGE_DELIMITER
 
+                    response_format_start = time.perf_counter()
                     response_agent = ResponseFormatterAgent()
                     user_readable_response = response_agent.format_response(
                         user_query=queries_history[-1],
@@ -466,6 +506,8 @@ What this will do:
                         query_results=query_results,
                         db_description=db_description
                     )
+                    response_format_elapsed = time.perf_counter() - response_format_start
+                    logging.info("Response formatting took %.2f seconds", response_format_elapsed)
 
                     yield json.dumps(
                         {
@@ -474,11 +516,21 @@ What this will do:
                         }
                     ) + MESSAGE_DELIMITER
 
+                    # Log overall completion time
+                    overall_elapsed = time.perf_counter() - overall_start
+                    logging.info("Query processing completed successfully - Total time: %.2f seconds", overall_elapsed)
+
                 except Exception as e:
+                    overall_elapsed = time.perf_counter() - overall_start
                     logging.error("Error executing SQL query: %s", str(e))
+                    logging.info("Query processing failed during execution - Total time: %.2f seconds", overall_elapsed)
                     yield json.dumps(
                         {"type": "error", "message": "Error executing SQL query"}
                     ) + MESSAGE_DELIMITER
+            else:
+                # SQL query is not valid/translatable
+                overall_elapsed = time.perf_counter() - overall_start
+                logging.info("Query processing completed (non-translatable SQL) - Total time: %.2f seconds", overall_elapsed)
 
     return StreamingResponse(generate(), media_type="application/json")
 
@@ -500,14 +552,23 @@ async def confirm_destructive_operation(request: Request, graph_id: str, confirm
 
     # Create a generator function for streaming the confirmation response
     async def generate_confirmation():
+        # Start timing for confirmation process
+        confirmation_start = time.perf_counter()
+        logging.info("Starting destructive operation confirmation process")
+        
         if confirmation == "CONFIRM":
             try:
+                db_prep_start = time.perf_counter()
                 db_description, db_url = await get_db_description(graph_id)
 
                 # Determine database type and get appropriate loader
                 db_type, loader_class = get_database_type_and_loader(db_url)
+                db_prep_elapsed = time.perf_counter() - db_prep_start
+                logging.info("Database preparation for confirmation took %.2f seconds", db_prep_elapsed)
 
                 if not loader_class:
+                    confirmation_elapsed = time.perf_counter() - confirmation_start
+                    logging.info("Confirmation process failed (no loader) - Total time: %.2f seconds", confirmation_elapsed)
                     yield json.dumps({
                         "type": "error", 
                         "message": "Unable to determine database type"
@@ -519,11 +580,17 @@ async def confirm_destructive_operation(request: Request, graph_id: str, confirm
                 yield json.dumps(step) + MESSAGE_DELIMITER
 
                 # Check if this query modifies the database schema using appropriate loader
+                schema_check_start = time.perf_counter()
                 is_schema_modifying, operation_type = (
                     loader_class.is_schema_modifying_query(sql_query)
                 )
+                schema_check_elapsed = time.perf_counter() - schema_check_start
+                logging.info("Schema modification check for confirmation took %.2f seconds", schema_check_elapsed)
 
+                sql_exec_start = time.perf_counter()
                 query_results = loader_class.execute_sql_query(sql_query, db_url)
+                sql_exec_elapsed = time.perf_counter() - sql_exec_start
+                logging.info("Confirmed SQL query execution took %.2f seconds", sql_exec_elapsed)
                 yield json.dumps(
                     {
                         "type": "query_result",
@@ -537,9 +604,12 @@ async def confirm_destructive_operation(request: Request, graph_id: str, confirm
                            "message": "Step 3: Schema change detected - refreshing graph..."}
                     yield json.dumps(step) + MESSAGE_DELIMITER
 
+                    refresh_start = time.perf_counter()
                     refresh_success, refresh_message = (
                         loader_class.refresh_graph_schema(graph_id, db_url)
                     )
+                    refresh_elapsed = time.perf_counter() - refresh_start
+                    logging.info("Schema refresh for confirmation took %.2f seconds", refresh_elapsed)
 
                     if refresh_success:
                         yield json.dumps(
@@ -567,6 +637,7 @@ async def confirm_destructive_operation(request: Request, graph_id: str, confirm
                        "message": f"Step {step_num}: Generating user-friendly response"}
                 yield json.dumps(step) + MESSAGE_DELIMITER
 
+                response_format_start = time.perf_counter()
                 response_agent = ResponseFormatterAgent()
                 user_readable_response = response_agent.format_response(
                     user_query=queries_history[-1] if queries_history else "Destructive operation",
@@ -574,6 +645,8 @@ async def confirm_destructive_operation(request: Request, graph_id: str, confirm
                     query_results=query_results,
                     db_description=db_description
                 )
+                response_format_elapsed = time.perf_counter() - response_format_start
+                logging.info("Response formatting for confirmation took %.2f seconds", response_format_elapsed)
 
                 yield json.dumps(
                     {
@@ -582,13 +655,21 @@ async def confirm_destructive_operation(request: Request, graph_id: str, confirm
                     }
                 ) + MESSAGE_DELIMITER
 
+                # Log overall confirmation completion time
+                confirmation_elapsed = time.perf_counter() - confirmation_start
+                logging.info("Destructive operation confirmation completed successfully - Total time: %.2f seconds", confirmation_elapsed)
+
             except Exception as e:
+                confirmation_elapsed = time.perf_counter() - confirmation_start
                 logging.error("Error executing confirmed SQL query: %s", str(e))
+                logging.info("Confirmation process failed during execution - Total time: %.2f seconds", confirmation_elapsed)
                 yield json.dumps(
                     {"type": "error", "message": "Error executing query"}
                 ) + MESSAGE_DELIMITER
         else:
             # User cancelled or provided invalid confirmation
+            confirmation_elapsed = time.perf_counter() - confirmation_start
+            logging.info("Destructive operation cancelled by user - Time until cancellation: %.2f seconds", confirmation_elapsed)
             yield json.dumps(
                 {
                     "type": "operation_cancelled",
