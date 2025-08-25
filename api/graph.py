@@ -287,6 +287,9 @@ async def find(
     json_data = json.loads(completion_result.choices[0].message.content)
     descriptions = Descriptions(**json_data)
     descriptions_text = [desc.description for desc in descriptions.tables_descriptions] + [desc.description for desc in descriptions.columns_descriptions]
+    if not descriptions_text:
+        return []
+    
     embedding_results = Config.EMBEDDING_MODEL.embed(descriptions_text)
     
     # Split embeddings back into table and column embeddings
