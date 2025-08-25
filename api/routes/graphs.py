@@ -9,6 +9,7 @@ from concurrent.futures import TimeoutError as FuturesTimeoutError
 from fastapi import APIRouter, Request, HTTPException, UploadFile, File
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
+from redis import ResponseError
 
 from api.agents import AnalysisAgent, RelevancyAgent, ResponseFormatterAgent
 from api.auth.user_management import token_required
@@ -717,6 +718,9 @@ async def delete_graph(request: Request, graph_id: str):
         graph = db.select_graph(namespaced)
         graph.delete()
         return JSONResponse(content={"success": True, "graph": graph_id})
+    except ResponseError:
+        return JSONResponse(content={"error": "Failed to delete graph, Graph not found"},
+                            status_code=404)
     except Exception as e:
         logging.exception("Failed to delete graph %s: %s", sanitize_log_input(namespaced), e)
         return JSONResponse(content={"error": "Failed to delete graph"}, status_code=500)
