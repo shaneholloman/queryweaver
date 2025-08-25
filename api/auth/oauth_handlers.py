@@ -34,7 +34,7 @@ def setup_oauth_handlers(app: FastAPI, oauth: OAuth):
                 return False
 
             # Check if identity exists in Organizations graph, create if new
-            _, _ = ensure_user_in_organizations(
+            _, _ = await ensure_user_in_organizations(
                 user_id,
                 email,
                 name,
@@ -62,7 +62,7 @@ def setup_oauth_handlers(app: FastAPI, oauth: OAuth):
                 return False
 
             # Check if identity exists in Organizations graph, create if new
-            _, _ = ensure_user_in_organizations(
+            _, _ = await ensure_user_in_organizations(
                 user_id,
                 email,
                 name,

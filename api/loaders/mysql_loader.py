@@ -125,7 +125,7 @@ class MySQLLoader(BaseLoader):
         }
 
     @staticmethod
-    def load(prefix: str, connection_url: str) -> Tuple[bool, str]:
+    async def load(prefix: str, connection_url: str) -> Tuple[bool, str]:
         """
         Load the graph data from a MySQL database into the graph database.
 
@@ -158,7 +158,7 @@ class MySQLLoader(BaseLoader):
             conn.close()
 
             # Load data into graph
-            load_to_graph(prefix + "_" + db_name, entities, relationships,
+            await load_to_graph(prefix + "_" + db_name, entities, relationships,
                          db_name=db_name, db_url=connection_url)
 
             return True, (f"MySQL schema loaded successfully. "
@@ -436,7 +436,7 @@ class MySQLLoader(BaseLoader):
                 prefix = graph_id
 
             # Reuse the existing load method to reload the schema
-            success, message = MySQLLoader.load(prefix, db_url)
+            success, message = await MySQLLoader.load(prefix, db_url)
 
             if success:
                 logging.info("Graph schema refreshed successfully.")

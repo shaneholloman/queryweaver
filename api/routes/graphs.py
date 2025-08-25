@@ -223,7 +223,7 @@ async def load_graph(request: Request, data: GraphData = None, file: UploadFile 
             raise HTTPException(status_code=400, detail="Invalid JSON data")
 
         graph_id = request.state.user_id + "_" + data.database
-        success, result = JSONLoader.load(graph_id, data.dict())
+        success, result = await JSONLoader.load(graph_id, data.dict())
 
     # ✅ Handle File Upload
     elif file:
@@ -235,7 +235,7 @@ async def load_graph(request: Request, data: GraphData = None, file: UploadFile 
             try:
                 data = json.loads(content.decode("utf-8"))
                 graph_id = request.state.user_id + "_" + data.get("database", "")
-                success, result = JSONLoader.load(graph_id, data)
+                success, result = await JSONLoader.load(graph_id, data)
             except json.JSONDecodeError:
                 raise HTTPException(status_code=400, detail="Invalid JSON file")
 
@@ -243,13 +243,13 @@ async def load_graph(request: Request, data: GraphData = None, file: UploadFile 
         elif filename.endswith(".xml"):
             xml_data = content.decode("utf-8")
             graph_id = request.state.user_id + "_" + filename.replace(".xml", "")
-            success, result = ODataLoader.load(graph_id, xml_data)
+            success, result = await ODataLoader.load(graph_id, xml_data)
 
         # ✅ Check if file is csv
         elif filename.endswith(".csv"):
             csv_data = content.decode("utf-8")
             graph_id = request.state.user_id + "_" + filename.replace(".csv", "")
-            success, result = CSVLoader.load(graph_id, csv_data)
+            success, result = await CSVLoader.load(graph_id, csv_data)
 
         else:
             raise HTTPException(status_code=415, detail="Unsupported file type")
