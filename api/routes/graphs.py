@@ -141,8 +141,8 @@ async def get_graph_data(request: Request, graph_id: str):
     """
 
     try:
-        tables_res = await graph.query(tables_query).result_set
-        links_res = await graph.query(links_query).result_set
+        tables_res = (await graph.query(tables_query)).result_set
+        links_res = (await graph.query(links_query)).result_set
     except Exception as e:
         logging.error("Error querying graph data for %s: %s", sanitize_log_input(namespaced), e)
         return JSONResponse(content={"error": "Failed to read graph data"}, status_code=500)
@@ -457,7 +457,7 @@ What this will do:
                                          "refreshing graph...")}
                         yield json.dumps(step) + MESSAGE_DELIMITER
 
-                        refresh_result = loader_class.refresh_graph_schema(
+                        refresh_result = await loader_class.refresh_graph_schema(
                             graph_id, db_url)
                         refresh_success, refresh_message = refresh_result
 
@@ -556,7 +556,7 @@ async def confirm_destructive_operation(
     async def generate_confirmation():
         if confirmation == "CONFIRM":
             try:
-                db_description, db_url = get_db_description(graph_id)
+                db_description, db_url = await get_db_description(graph_id)
 
                 # Determine database type and get appropriate loader
                 db_type, loader_class = get_database_type_and_loader(db_url)
@@ -590,7 +590,7 @@ async def confirm_destructive_operation(
                            "message": "Step 3: Schema change detected - refreshing graph..."}
                     yield json.dumps(step) + MESSAGE_DELIMITER
 
-                    refresh_success, refresh_message = (
+                    refresh_success, refresh_message = await (
                         loader_class.refresh_graph_schema(graph_id, db_url)
                     )
 
@@ -664,7 +664,7 @@ async def refresh_graph_schema(request: Request, graph_id: str):
 
     try:
         # Get database connection details
-        _, db_url = get_db_description(graph_id)
+        _, db_url = await get_db_description(graph_id)
 
         if not db_url or db_url == "No URL available for this database.":
             return JSONResponse({
@@ -682,7 +682,7 @@ async def refresh_graph_schema(request: Request, graph_id: str):
             }, status_code=400)
 
         # Perform schema refresh using the appropriate loader
-        success, message = loader_class.refresh_graph_schema(graph_id, db_url)
+        success, message = await loader_class.refresh_graph_schema(graph_id, db_url)
 
         if success:
             return JSONResponse({
