@@ -590,8 +590,8 @@ async def confirm_destructive_operation(
                            "message": "Step 3: Schema change detected - refreshing graph..."}
                     yield json.dumps(step) + MESSAGE_DELIMITER
 
-                    refresh_success, refresh_message = await (
-                        loader_class.refresh_graph_schema(graph_id, db_url)
+                    refresh_success, refresh_message = (
+                        await loader_class.refresh_graph_schema(graph_id, db_url)
                     )
 
                     if refresh_success:
