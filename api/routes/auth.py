@@ -258,7 +258,7 @@ async def github_authorized(request: Request) -> RedirectResponse:
                 )
 
                 return redirect
-            
+
         raise HTTPException(status_code=400, detail="Failed to get user info from Github")
 
     except Exception as e:
@@ -274,47 +274,7 @@ async def github_callback_compat(request: Request) -> RedirectResponse:
 
 @auth_router.get("/logout", response_class=RedirectResponse)
 async def logout(request: Request) -> RedirectResponse:
-    """Handle user logout and revoke tokens for Google (actively) and GitHub (locally)."""
-    # google_token = request.session.get("google_token")
-    # github_token = request.session.get("github_token")
-
-    # # ---- Revoke Google tokens ----
-    # if google_token:
-    #     tokens_to_revoke = []
-    #     if access_token := google_token.get("access_token"):
-    #         tokens_to_revoke.append(access_token)
-    #     if refresh_token := google_token.get("refresh_token"):
-    #         tokens_to_revoke.append(refresh_token)
-
-    #     if tokens_to_revoke:
-    #         try:
-    #             async with httpx.AsyncClient() as client:
-    #                 for token in tokens_to_revoke:
-    #                     resp = await client.post(
-    #                         "https://oauth2.googleapis.com/revoke",
-    #                         params={"token": token},
-    #                         headers={"content-type": "application/x-www-form-urlencoded"},
-    #                     )
-    #                     if resp.status_code != 200:
-    #                         logging.warning(
-    #                             "Google token revoke failed (%s): %s",
-    #                             resp.status_code,
-    #                             resp.text,
-    #                         )
-    #                     else:
-    #                         logging.info("Successfully revoked Google token")
-    #         except Exception as e:
-    #             logging.error("Error revoking Google tokens: %s", e)
-
-    # # ---- Handle GitHub tokens ----
-    # if github_token:
-    #     logging.info("GitHub token found, clearing from session (no remote revoke available).")
-    #     # GitHub logout is local only unless we call the App management API
-
-    # # ---- Clear session auth keys ----
-    # for key in ["user_info", "google_token", "github_token", "token_validated_at"]:
-    #     request.session.pop(key, None)
-
+    """Handle user logout and delete session cookies."""
     resp = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
 
     api_token = request.cookies.get("api_token")
