@@ -3,6 +3,8 @@
 import asyncio
 from contextlib import asynccontextmanager
 import logging
+
+from fastapi import FastAPI
 from api.app_factory import create_app
 
 def log_all_tasks(prefix=""):
