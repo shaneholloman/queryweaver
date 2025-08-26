@@ -57,8 +57,6 @@ async def chat(request: Request) -> HTMLResponse:
         is_authenticated = False
         user_info = None
 
-    print(f"XXXXXXXXXXXXXXXXXX User Info: {user_info}, Authenticated: {is_authenticated}")
-
     return templates.TemplateResponse(
         "chat.j2",
         {

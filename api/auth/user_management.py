@@ -49,12 +49,7 @@ async def _get_user_info(api_token: str) -> Optional[Dict[str, Any]]:
 
         return None
     except Exception as e:
-        logging.exception("Error fetching user info")
-        error = "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY Error fetching user info: "  + str(e)
-        logging.error(error)
-        logging.error("Error fetching user info: %s", str(e))
-        logging.error(f"Error fetching user info: {e}")
-        logging.error("Error fetching user info", exc_info=True)
+        logging.error("Error fetching user info: %s", e)
         return None
 
 

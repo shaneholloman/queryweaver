@@ -1,29 +1,8 @@
 """Main entry point for the text2sql API."""
 
-import asyncio
-from contextlib import asynccontextmanager
-import logging
-
-from fastapi import FastAPI
 from api.app_factory import create_app
 
-def log_all_tasks(prefix=""):
-    tasks = asyncio.all_tasks()
-    if not tasks:
-        logging.error("%sNo running asyncio tasks", prefix)
-        return
-    for t in tasks:
-        logging.error("%sTask: %r, done=%s, cancelled=%s", prefix, t, t.done(), t.cancelled())
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # startup
-    yield
-    # shutdown
-    log_all_tasks("[SHUTDOWN] ")
-
 app = create_app()
-
 
 if __name__ == "__main__":
     import os
