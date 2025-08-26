@@ -17,11 +17,12 @@ class AnalysisAgent(BaseAgent):
         combined_tables: list,
         db_description: str,
         instructions: str = None,
+        memory_context: str = None,
     ) -> dict:
         """Get analysis of user query against database schema."""
         formatted_schema = self._format_schema(combined_tables)
         prompt = self._build_prompt(
-            user_query, formatted_schema, db_description, instructions
+            user_query, formatted_schema, db_description, instructions, memory_context
         )
         self.messages.append({"role": "user", "content": prompt})
         completion_result = completion(
@@ -102,7 +103,7 @@ class AnalysisAgent(BaseAgent):
         return "\n".join(formatted_schema)
 
     def _build_prompt(
-        self, user_input: str, formatted_schema: str, db_description: str, instructions
+        self, user_input: str, formatted_schema: str, db_description: str, instructions, memory_context: str = None
     ) -> str:
         """
         Build the prompt for Claude to analyze the query.
@@ -110,10 +111,31 @@ class AnalysisAgent(BaseAgent):
         Args:
             user_input: The natural language query from the user
             formatted_schema: Formatted database schema
+            db_description: Description of the database
+            instructions: Custom instructions for the query
+            memory_context: User and database memory context from previous interactions
 
         Returns:
             The formatted prompt for Claude
         """
+        
+        # Include memory context in the prompt if available
+        memory_section = ""
+        if memory_context and memory_context.strip():
+            memory_section = f"""
+            <memory_context>
+            The following information contains relevant context from previous interactions:
+            
+            {memory_context.strip()}
+            
+            Use this context to:
+            1. Better understand the user's preferences and working style
+            2. Leverage previous learnings about this database
+            3. Provide more personalized and context-aware SQL generation
+            4. Consider any patterns or preferences the user has shown in past interactions
+            </memory_context>
+            """
+        
         prompt = f"""
             You must strictly follow the instructions below. Deviations will result in a penalty to your confidence score.
 
@@ -143,7 +165,7 @@ class AnalysisAgent(BaseAgent):
             <database_schema>
             {formatted_schema}
             </database_schema>
-
+            {memory_section}
             <conversation_history>
             {self.messages}
             </conversation_history>
@@ -163,6 +185,7 @@ class AnalysisAgent(BaseAgent):
             - Penalize confidence appropriately if any part of the instructions is unmet.
             - When there several tables that can be used to answer the question,
               you can combine them in a single SQL query.
+            - Use the memory context to inform your SQL generation, considering user preferences and previous database interactions.
 
             Provide your output ONLY in the following JSON structure:
 
@@ -196,6 +219,7 @@ class AnalysisAgent(BaseAgent):
             8. Strictly apply instructions; explain and penalize if not possible.
             9. If the question is a follow-up, resolve references using the
                conversation history and previous answers.
+            10. Use memory context to provide more personalized and informed SQL generation.
 
             Again: OUTPUT ONLY VALID JSON. No explanations outside the JSON block. """
         return prompt
