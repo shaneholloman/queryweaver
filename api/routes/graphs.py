@@ -59,10 +59,10 @@ class ConfirmRequest(BaseModel):
 def get_database_type_and_loader(db_url: str):
     """
     Determine the database type from URL and return appropriate loader class.
-    
+
     Args:
         db_url: Database connection URL
-        
+
     Returns:
         tuple: (database_type, loader_class)
     """
@@ -296,8 +296,9 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
     async def generate():
         # Start overall timing
         overall_start = time.perf_counter()
-        logging.info("Starting query processing pipeline for query: %s", sanitize_query(queries_history[-1]))
-        
+        logging.info("Starting query processing pipeline for query: %s",
+                     sanitize_query(queries_history[-1]))
+
         agent_rel = RelevancyAgent(queries_history, result_history)
         agent_an = AnalysisAgent(queries_history, result_history)
 
@@ -306,15 +307,16 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
         yield json.dumps(step) + MESSAGE_DELIMITER
         # Ensure the database description is loaded
         db_description, db_url = await get_db_description(graph_id)
-        
+
         # Determine database type and get appropriate loader
         db_type, loader_class = get_database_type_and_loader(db_url)
 
         if not loader_class:
             overall_elapsed = time.perf_counter() - overall_start
-            logging.info("Query processing failed (no loader) - Total time: %.2f seconds", overall_elapsed)
+            logging.info("Query processing failed (no loader) - Total time: %.2f seconds",
+                         overall_elapsed)
             yield json.dumps({
-                "type": "error", 
+                "type": "error",
                 "message": "Unable to determine database type"
             }) + MESSAGE_DELIMITER
             return
@@ -327,10 +329,10 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
         ))
 
         logging.info("Starting relevancy check and graph analysis concurrently")
-        
+
         # Wait for relevancy check first
         answer_rel = await relevancy_task
-        
+
         if answer_rel["status"] != "On-topic":
             # Cancel the find task since query is off-topic
             find_task.cancel()
@@ -338,7 +340,7 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
                 await find_task
             except asyncio.CancelledError:
                 logging.info("Find task cancelled due to off-topic query")
-            
+
             step = {
                 "type": "followup_questions",
                 "message": "Off topic question: " + answer_rel["reason"],
@@ -347,7 +349,8 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
             yield json.dumps(step) + MESSAGE_DELIMITER
             # Total time for off-topic query
             overall_elapsed = time.perf_counter() - overall_start
-            logging.info("Query processing completed (off-topic) - Total time: %.2f seconds", overall_elapsed)
+            logging.info("Query processing completed (off-topic) - Total time: %.2f seconds",
+                         overall_elapsed)
         else:
             # Query is on-topic, wait for find results
             result = await find_task
@@ -427,7 +430,10 @@ What this will do:
                     ) + MESSAGE_DELIMITER
                     # Log end-to-end time for destructive operation that requires confirmation
                     overall_elapsed = time.perf_counter() - overall_start
-                    logging.info("Query processing halted for confirmation - Total time: %.2f seconds", overall_elapsed)
+                    logging.info(
+                        "Query processing halted for confirmation - Total time: %.2f seconds",
+                        overall_elapsed
+                    )
                     return  # Stop here and wait for user confirmation
 
                 try:
@@ -440,7 +446,7 @@ What this will do:
                     )
 
                     query_results = loader_class.execute_sql_query(answer_an["sql_query"], db_url)
-                    
+
                     yield json.dumps(
                         {
                             "type": "query_result",
@@ -506,23 +512,33 @@ What this will do:
 
                     # Log overall completion time
                     overall_elapsed = time.perf_counter() - overall_start
-                    logging.info("Query processing completed successfully - Total time: %.2f seconds", overall_elapsed)
+                    logging.info(
+                        "Query processing completed successfully - Total time: %.2f seconds",
+                        overall_elapsed
+                    )
 
                 except Exception as e:
                     overall_elapsed = time.perf_counter() - overall_start
                     logging.error("Error executing SQL query: %s", str(e))
-                    logging.info("Query processing failed during execution - Total time: %.2f seconds", overall_elapsed)
+                    logging.info(
+                        "Query processing failed during execution - Total time: %.2f seconds",
+                        overall_elapsed
+                    )
                     yield json.dumps(
                         {"type": "error", "message": "Error executing SQL query"}
                     ) + MESSAGE_DELIMITER
             else:
                 # SQL query is not valid/translatable
                 overall_elapsed = time.perf_counter() - overall_start
-                logging.info("Query processing completed (non-translatable SQL) - Total time: %.2f seconds", overall_elapsed)
+                logging.info(
+                    "Query processing completed (non-translatable SQL) - Total time: %.2f seconds",
+                    overall_elapsed
+                )
 
         # Log timing summary at the end of processing
         overall_elapsed = time.perf_counter() - overall_start
-        logging.info("Query processing pipeline completed - Total time: %.2f seconds", overall_elapsed)
+        logging.info("Query processing pipeline completed - Total time: %.2f seconds",
+                     overall_elapsed)
 
     return StreamingResponse(generate(), media_type="application/json")
 
@@ -561,7 +577,7 @@ async def confirm_destructive_operation(
 
                 if not loader_class:
                     yield json.dumps({
-                        "type": "error", 
+                        "type": "error",
                         "message": "Unable to determine database type"
                     }) + MESSAGE_DELIMITER
                     return
