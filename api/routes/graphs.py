@@ -4,8 +4,6 @@ import asyncio
 import json
 import logging
 import time
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import TimeoutError as FuturesTimeoutError
 
 from fastapi import APIRouter, Request, HTTPException, UploadFile, File
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -13,7 +11,6 @@ from pydantic import BaseModel
 
 from api.agents import AnalysisAgent, RelevancyAgent, ResponseFormatterAgent
 from api.auth.user_management import token_required
-from api.memory import create_memory_manager
 from api.extensions import db
 from api.graph import find, get_db_description
 from api.loaders.csv_loader import CSVLoader
@@ -21,6 +18,7 @@ from api.loaders.json_loader import JSONLoader
 from api.loaders.postgres_loader import PostgresLoader
 from api.loaders.mysql_loader import MySQLLoader
 from api.loaders.odata_loader import ODataLoader
+from api.memory.graphiti_tool import MemoryTool
 
 # Use the same delimiter as in the JavaScript
 MESSAGE_DELIMITER = "|||FALKORDB_MESSAGE_BOUNDARY|||"
@@ -62,10 +60,10 @@ class ConfirmRequest(BaseModel):
 def get_database_type_and_loader(db_url: str):
     """
     Determine the database type from URL and return appropriate loader class.
-    
+
     Args:
         db_url: Database connection URL
-        
+
     Returns:
         tuple: (database_type, loader_class)
     """
@@ -119,7 +117,7 @@ async def get_graph_data(request: Request, graph_id: str):
         return JSONResponse(content={"error": "Invalid graph_id"}, status_code=400)
 
     graph_id = graph_id.strip()[:200]
-    namespaced = request.state.user_id + "_" + graph_id
+    namespaced = f"{request.state.user_id}_{graph_id}"
 
     try:
         graph = db.select_graph(namespaced)
@@ -142,8 +140,8 @@ async def get_graph_data(request: Request, graph_id: str):
     """
 
     try:
-        tables_res = await graph.query(tables_query).result_set
-        links_res = await graph.query(links_query).result_set
+        tables_res = (await graph.query(tables_query)).result_set
+        links_res = (await graph.query(links_query)).result_set
     except Exception as e:
         logging.error("Error querying graph data for %s: %s", sanitize_log_input(namespaced), e)
         return JSONResponse(content={"error": "Failed to read graph data"}, status_code=500)
@@ -223,8 +221,8 @@ async def load_graph(request: Request, data: GraphData = None, file: UploadFile 
         if not hasattr(data, 'database') or not data.database:
             raise HTTPException(status_code=400, detail="Invalid JSON data")
 
-        graph_id = request.state.user_id + "_" + data.database
-        success, result = JSONLoader.load(graph_id, data.dict())
+        graph_id = f"{request.state.user_id}_{data.database}"
+        success, result = await JSONLoader.load(graph_id, data.dict())
 
     # ✅ Handle File Upload
     elif file:
@@ -235,22 +233,22 @@ async def load_graph(request: Request, data: GraphData = None, file: UploadFile 
         if filename.endswith(".json"):
             try:
                 data = json.loads(content.decode("utf-8"))
-                graph_id = request.state.user_id + "_" + data.get("database", "")
-                success, result = JSONLoader.load(graph_id, data)
+                graph_id = f"{request.state.user_id}_{data.get('database', '')}"
+                success, result = await JSONLoader.load(graph_id, data)
             except json.JSONDecodeError:
                 raise HTTPException(status_code=400, detail="Invalid JSON file")
 
         # ✅ Check if file is XML
         elif filename.endswith(".xml"):
             xml_data = content.decode("utf-8")
-            graph_id = request.state.user_id + "_" + filename.replace(".xml", "")
-            success, result = ODataLoader.load(graph_id, xml_data)
+            graph_id = f"{request.state.user_id}_{filename.replace('.xml', '')}"
+            success, result = await ODataLoader.load(graph_id, xml_data)
 
         # ✅ Check if file is csv
         elif filename.endswith(".csv"):
             csv_data = content.decode("utf-8")
-            graph_id = request.state.user_id + "_" + filename.replace(".csv", "")
-            success, result = CSVLoader.load(graph_id, csv_data)
+            graph_id = f"{request.state.user_id}_{filename.replace('.csv', '')}"
+            success, result = await CSVLoader.load(graph_id, csv_data)
 
         else:
             raise HTTPException(status_code=415, detail="Unsupported file type")
@@ -281,19 +279,7 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
     if not graph_id:
         raise HTTPException(status_code=400, detail="Invalid graph_id")
 
-    # Get user info from session
-    user_info = request.session.get("user_info")
-    if not user_info:
-        raise HTTPException(status_code=401, detail="User not authenticated")
-    
-    user_id = user_info["id"]
-    
-    # Create memory manager for the current user and switch to this database
-    memory_manager = await create_memory_manager(user_id)
-    if memory_manager:
-        await memory_manager.switch_database(graph_id)
-
-    graph_id = request.state.user_id + "_" + graph_id
+    graph_id = f"{request.state.user_id}_{graph_id}"
 
     queries_history = chat_data.chat if hasattr(chat_data, 'chat') else None
     result_history = chat_data.result if hasattr(chat_data, 'result') else None
@@ -307,12 +293,16 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
 
     logging.info("User Query: %s", sanitize_query(queries_history[-1]))
 
+    memory_tool_task = asyncio.create_task(MemoryTool.create(request.state.user_id, graph_id))
+
+
     # Create a generator function for streaming
     async def generate():
         # Start overall timing
         overall_start = time.perf_counter()
-        logging.info("Starting query processing pipeline for query: %s", sanitize_query(queries_history[-1]))
-        
+        logging.info("Starting query processing pipeline for query: %s",
+                     sanitize_query(queries_history[-1]))
+
         agent_rel = RelevancyAgent(queries_history, result_history)
         agent_an = AnalysisAgent(queries_history, result_history)
 
@@ -321,15 +311,16 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
         yield json.dumps(step) + MESSAGE_DELIMITER
         # Ensure the database description is loaded
         db_description, db_url = await get_db_description(graph_id)
-        
+
         # Determine database type and get appropriate loader
         db_type, loader_class = get_database_type_and_loader(db_url)
 
         if not loader_class:
             overall_elapsed = time.perf_counter() - overall_start
-            logging.info("Query processing failed (no loader) - Total time: %.2f seconds", overall_elapsed)
+            logging.info("Query processing failed (no loader) - Total time: %.2f seconds",
+                         overall_elapsed)
             yield json.dumps({
-                "type": "error", 
+                "type": "error",
                 "message": "Unable to determine database type"
             }) + MESSAGE_DELIMITER
             return
@@ -342,18 +333,18 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
         ))
 
         logging.info("Starting relevancy check and graph analysis concurrently")
-        
+
         # Wait for relevancy check first
         answer_rel = await relevancy_task
-        
-        if answer_rel["status"] != "On-topic":
+
+        if False:#answer_rel["status"] != "On-topic":
             # Cancel the find task since query is off-topic
             find_task.cancel()
             try:
                 await find_task
             except asyncio.CancelledError:
                 logging.info("Find task cancelled due to off-topic query")
-            
+
             step = {
                 "type": "followup_questions",
                 "message": "Off topic question: " + answer_rel["reason"],
@@ -362,17 +353,33 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
             yield json.dumps(step) + MESSAGE_DELIMITER
             # Total time for off-topic query
             overall_elapsed = time.perf_counter() - overall_start
-            logging.info("Query processing completed (off-topic) - Total time: %.2f seconds", overall_elapsed)
+            logging.info("Query processing completed (off-topic) - Total time: %.2f seconds",
+                         overall_elapsed)
         else:
             # Query is on-topic, wait for find results
             result = await find_task
 
             logging.info("Calling to analysis agent with query: %s",
                          sanitize_query(queries_history[-1]))
-
+            memory_tool = await memory_tool_task
+            search_memories = await memory_tool.search_memories_concurrent(
+                query=queries_history[-1]
+            )
+            
+            # Extract memory context for the analysis agent
+            user_context = search_memories.get("user_summary", "")
+            database_context = search_memories.get("database_facts", "")
+            
+            # Prepare memory context description for the agent
+            memory_context = ""
+            if user_context:
+                memory_context += f"USER CONTEXT (Personal preferences and information):\n{user_context}\n\n"
+            if database_context:
+                memory_context += f"DATABASE INTERACTION HISTORY (Previous queries and learnings about this database):\n{database_context}\n\n"
+            
             logging.info("Starting SQL generation with analysis agent")
             answer_an = agent_an.get_analysis(
-                queries_history[-1], result, db_description, instructions
+                queries_history[-1], result, db_description, instructions, memory_context
             )
 
             logging.info("Generated SQL query: %s", answer_an['sql_query'])
@@ -442,7 +449,10 @@ What this will do:
                     ) + MESSAGE_DELIMITER
                     # Log end-to-end time for destructive operation that requires confirmation
                     overall_elapsed = time.perf_counter() - overall_start
-                    logging.info("Query processing halted for confirmation - Total time: %.2f seconds", overall_elapsed)
+                    logging.info(
+                        "Query processing halted for confirmation - Total time: %.2f seconds",
+                        overall_elapsed
+                    )
                     return  # Stop here and wait for user confirmation
 
                 try:
@@ -455,7 +465,7 @@ What this will do:
                     )
 
                     query_results = loader_class.execute_sql_query(answer_an["sql_query"], db_url)
-                    
+
                     yield json.dumps(
                         {
                             "type": "query_result",
@@ -470,7 +480,7 @@ What this will do:
                                          "refreshing graph...")}
                         yield json.dumps(step) + MESSAGE_DELIMITER
 
-                        refresh_result = loader_class.refresh_graph_schema(
+                        refresh_result = await loader_class.refresh_graph_schema(
                             graph_id, db_url)
                         refresh_success, refresh_message = refresh_result
 
@@ -521,26 +531,36 @@ What this will do:
 
                     # Log overall completion time
                     overall_elapsed = time.perf_counter() - overall_start
-                    logging.info("Query processing completed successfully - Total time: %.2f seconds", overall_elapsed)
+                    logging.info(
+                        "Query processing completed successfully - Total time: %.2f seconds",
+                        overall_elapsed
+                    )
 
                 except Exception as e:
                     overall_elapsed = time.perf_counter() - overall_start
                     logging.error("Error executing SQL query: %s", str(e))
-                    logging.info("Query processing failed during execution - Total time: %.2f seconds", overall_elapsed)
+                    logging.info(
+                        "Query processing failed during execution - Total time: %.2f seconds",
+                        overall_elapsed
+                    )
                     yield json.dumps(
                         {"type": "error", "message": "Error executing SQL query"}
                     ) + MESSAGE_DELIMITER
             else:
                 # SQL query is not valid/translatable
                 overall_elapsed = time.perf_counter() - overall_start
-                logging.info("Query processing completed (non-translatable SQL) - Total time: %.2f seconds", overall_elapsed)
+                logging.info(
+                    "Query processing completed (non-translatable SQL) - Total time: %.2f seconds",
+                    overall_elapsed
+                )
 
         # Log timing summary at the end of processing
         overall_elapsed = time.perf_counter() - overall_start
-        logging.info("Query processing pipeline completed - Total time: %.2f seconds", overall_elapsed)
+        logging.info("Query processing pipeline completed - Total time: %.2f seconds",
+                     overall_elapsed)
 
         # Save conversation to memory manager if available
-        if memory_manager:
+        if memory_tool:
             try:
                 # Convert chat history to conversation format for memory manager
                 conversation = []
@@ -554,14 +574,14 @@ What this will do:
                         conversation_entry["sql"] = answer_an['sql_query']
                     
                     conversation.append(conversation_entry)
-                
-                # Save conversation with memory manager (run in background)
-                save_task = asyncio.create_task(memory_manager.save_user_conversation(conversation))
+
+                # Save conversation with memory tool (run in background)
+                save_task = asyncio.create_task(memory_tool.add_new_memory(conversation))
                 # Add error handling callback to prevent silent failures
-                save_task.add_done_callback(lambda t: logging.error(f"Memory save failed: {t.exception()}") if t.exception() else logging.info("Conversation saved to memory manager"))
+                save_task.add_done_callback(lambda t: logging.error(f"Memory save failed: {t.exception()}") if t.exception() else logging.info("Conversation saved to memory tool"))
                 logging.info("Conversation save task started in background")
             except Exception as e:
-                logging.error(f"Failed to save conversation to memory manager: {e}")
+                logging.error(f"Failed to save conversation to memory tool: {e}")
 
     return StreamingResponse(generate(), media_type="application/json")
 
@@ -576,7 +596,7 @@ async def confirm_destructive_operation(
     """
     Handle user confirmation for destructive SQL operations
     """
-    graph_id = request.state.user_id + "_" + graph_id.strip()
+    graph_id = f"{request.state.user_id}_{graph_id.strip()}"
 
     if hasattr(confirm_data, 'confirmation'):
         confirmation = confirm_data.confirmation.strip().upper()
@@ -593,14 +613,14 @@ async def confirm_destructive_operation(
     async def generate_confirmation():
         if confirmation == "CONFIRM":
             try:
-                db_description, db_url = get_db_description(graph_id)
+                db_description, db_url = await get_db_description(graph_id)
 
                 # Determine database type and get appropriate loader
                 db_type, loader_class = get_database_type_and_loader(db_url)
 
                 if not loader_class:
                     yield json.dumps({
-                        "type": "error", 
+                        "type": "error",
                         "message": "Unable to determine database type"
                     }) + MESSAGE_DELIMITER
                     return
@@ -628,7 +648,7 @@ async def confirm_destructive_operation(
                     yield json.dumps(step) + MESSAGE_DELIMITER
 
                     refresh_success, refresh_message = (
-                        loader_class.refresh_graph_schema(graph_id, db_url)
+                        await loader_class.refresh_graph_schema(graph_id, db_url)
                     )
 
                     if refresh_success:
@@ -697,11 +717,11 @@ async def refresh_graph_schema(request: Request, graph_id: str):
     This endpoint allows users to manually trigger a schema refresh
     if they suspect the graph is out of sync with the database.
     """
-    graph_id = request.state.user_id + "_" + graph_id.strip()
+    graph_id = f"{request.state.user_id}_{graph_id.strip()}"
 
     try:
         # Get database connection details
-        _, db_url = get_db_description(graph_id)
+        _, db_url = await get_db_description(graph_id)
 
         if not db_url or db_url == "No URL available for this database.":
             return JSONResponse({
@@ -719,7 +739,7 @@ async def refresh_graph_schema(request: Request, graph_id: str):
             }, status_code=400)
 
         # Perform schema refresh using the appropriate loader
-        success, message = loader_class.refresh_graph_schema(graph_id, db_url)
+        success, message = await loader_class.refresh_graph_schema(graph_id, db_url)
 
         if success:
             return JSONResponse({
