@@ -33,62 +33,6 @@ Example responses (personal queries):
 class FollowUpAgent(BaseAgent):
     """Agent for generating helpful follow-up questions when queries fail or are off-topic."""
 
-    def _format_schema(self, schema_data: list) -> str:
-        """
-        Format the schema data into a readable format for the prompt.
-
-        Args:
-            schema_data: Schema in the structure [table_name, table_description, foreign_keys, columns]
-
-        Returns:
-            Formatted schema as a string
-        """
-        if not schema_data:
-            return "No relevant tables found"
-            
-        formatted_schema = []
-
-        for table_info in schema_data:
-            table_name = table_info[0]
-            table_description = table_info[1]
-            foreign_keys = table_info[2]
-            columns = table_info[3]
-
-            # Format table header
-            table_str = f"Table: {table_name} - {table_description}\n"
-
-            # Format columns using the updated OrderedDict structure
-            for column in columns:
-                col_name = column.get("columnName", "")
-                col_type = column.get("dataType", None)
-                col_description = column.get("description", "")
-                col_key = column.get("keyType", None)
-                nullable = column.get("nullable", False)
-
-                key_info = (
-                    ", PRIMARY KEY"
-                    if col_key == "PRI"
-                    else ", FOREIGN KEY" if col_key == "FK" else ""
-                )
-                column_str = (f"  - {col_name} ({col_type},{key_info},{col_key},"
-                             f"{nullable}): {col_description}")
-                table_str += column_str + "\n"
-
-            # Format foreign keys
-            if isinstance(foreign_keys, dict) and foreign_keys:
-                table_str += "  Foreign Keys:\n"
-                for fk_name, fk_info in foreign_keys.items():
-                    column = fk_info.get("column", "")
-                    ref_table = fk_info.get("referenced_table", "")
-                    ref_column = fk_info.get("referenced_column", "")
-                    table_str += (
-                        f"  - {fk_name}: {column} references {ref_table}.{ref_column}\n"
-                    )
-
-            formatted_schema.append(table_str)
-
-        return "\n".join(formatted_schema)
-
     def generate_follow_up_question(
         self, 
         user_question: str,
@@ -114,16 +58,12 @@ class FollowUpAgent(BaseAgent):
         ambiguities = analysis_result.get("ambiguities", []) if analysis_result else []
         explanation = analysis_result.get("explanation", "No detailed explanation available") if analysis_result else "No analysis result available"
         
-        # Format found tables using the same formatting as analysis agent
-        formatted_tables = self._format_schema(found_tables) if found_tables else "No relevant tables found"
-        
         # Prepare the prompt
         prompt = FOLLOW_UP_GENERATION_PROMPT.format(
             QUESTION=user_question,
             IS_TRANSLATABLE=is_translatable,
             MISSING_INFO=missing_info,
             AMBIGUITIES=ambiguities,
-            FOUND_TABLES=formatted_tables,
             EXPLANATION=explanation
         )
         
