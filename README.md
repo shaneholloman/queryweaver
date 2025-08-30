@@ -122,6 +122,51 @@ QueryWeaver supports Google and GitHub OAuth. Create OAuth credentials for each 
 - Google: set authorized origin and callback `http://localhost:5000/login/google/authorized`
 - GitHub: set homepage and callback `http://localhost:5000/login/github/authorized`
 
+## MCP server: host or connect (optional)
+
+QueryWeaver includes optional support for the Model Context Protocol (MCP). You can either have QueryWeaver expose an MCP-compatible HTTP surface (so other services can call QueryWeaver as an MCP server), or configure QueryWeaver to call an external MCP server for model/context services.
+
+What QueryWeaver provides
+- The app registers MCP operations focused on Text2SQL flows:
+   - `list_databases`
+   - `connect_database`
+   - `database_schema`
+   - `query_database`
+
+- To disable the built-in MCP endpoints set `DISABLE_MCP=true` in your `.env` or environment (default: MCP enabled).
+- Configuration
+
+- `DISABLE_MCP` — disable QueryWeaver's built-in MCP HTTP surface. Set to `true` to disable. Default: `false` (MCP enabled).
+
+Examples
+
+Disable the built-in MCP when running with Docker:
+
+```bash
+docker run -p 5000:5000 -it --env DISABLE_MCP=true falkordb/queryweaver
+```
+Calling the built-in MCP endpoints (example)
+- The MCP surface is exposed as HTTP endpoints. 
+
+
+### Server Configuration
+Below is a minimal example `mcp.json` client configuration that targets a local QueryWeaver instance exposing the MCP HTTP surface at `/mcp`.
+
+```json
+{
+   "servers": {
+      "queryweaver": {
+         "type": "http",
+         "url": "http://127.0.0.1:5000/mcp",
+         "headers": {
+            "Authorization": "Bearer your_token_here"
+         }
+      }
+   },
+   "inputs": []
+}
+```
+
 ## Testing
 
 > Quick note: many tests require FalkorDB to be available. Use the included helper to run a test DB in Docker if needed.

@@ -318,6 +318,45 @@ Before submitting any changes, run these validation steps:
 - `tests/e2e/README.md`: Comprehensive E2E testing documentation
 - `setup_e2e_tests.sh`: Automated test environment setup script
 
+### MCP (Model Context Protocol)
+
+QueryWeaver optionally exposes an MCP HTTP surface (mounted at `/mcp`) to allow external MCP clients to call QueryWeaver's Text2SQL operations. Key points for coding agents and reviewers:
+
+- Runtime toggle: the built-in MCP endpoints can be disabled with the env var `DISABLE_MCP=true`. Default behavior is enabled.
+- Client config: consumers typically use an `mcp.json` (or client-specific config) that points to the MCP URL, for example:
+
+```json
+{
+   "servers": {
+      "queryweaver": { 
+         "type": "http", 
+         "url": "http://127.0.0.1:5000/mcp", 
+         "headers": { 
+            "Authorization": "Bearer your_token_here" 
+         } 
+      }
+   },
+   "inputs": []
+}
+```
+
+- Tools and examples: projects like GitMCP show common client configurations for Cursor, VSCode, and other MCP-capable tools; use those patterns for guidance when writing docs or adding examples in this repo.
+- Security: avoid embedding bearer tokens in repo files. Prefer runtime injection via env files or secret managers. If you need to demonstrate a token in tests, use mocked tokens and don't commit them.
+
+Example: generate `mcp.json` from an environment token (pseudo):
+
+```bash
+export MQW_TOKEN="secret-token"
+cat > mcp.json <<EOF
+{
+   "servers": {"queryweaver": {"type":"http","url":"http://127.0.0.1:5000/mcp","headers":{"Authorization":"Bearer ${MQW_TOKEN}"}}},
+   "inputs": []
+}
+EOF
+```
+
+If you change MCP wiring or add integrations, update `README.md` and `.env.example` accordingly and add tests that run with MCP enabled/disabled to cover both code paths.
+
 ## Trust These Instructions
 
 These instructions have been validated by running all commands and testing the complete workflow. Only search for additional information if:
