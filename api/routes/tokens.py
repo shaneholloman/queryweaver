@@ -48,7 +48,7 @@ def _hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
-def _get_user_email_from_graph(user_id: str) -> Optional[str]:
+async def _get_user_email_from_graph(user_id: str) -> Optional[str]:
     """Get user email from the Organizations graph"""
     try:
         organizations_graph = db.select_graph("Organizations")
@@ -60,7 +60,7 @@ def _get_user_email_from_graph(user_id: str) -> Optional[str]:
         LIMIT 1
         """
 
-        result = organizations_graph.query(query, {"user_id": user_id})
+        result = await organizations_graph.query(query, {"user_id": user_id})
 
         if result.result_set:
             return result.result_set[0][0]
@@ -109,7 +109,7 @@ async def generate_token(request: Request) -> TokenResponse:
         RETURN token
         """
 
-        result = organizations_graph.query(create_query, {
+        result = await organizations_graph.query(create_query, {
             "user_email": user_email,
             "token_id": token_id,
             "token_hash": token_hash,
@@ -148,7 +148,7 @@ async def list_tokens(request: Request) -> TokenListResponse:
     """List all tokens for the authenticated user"""
     try:
         user_id = request.state.user_id
-        user_email = _get_user_email_from_graph(user_id)
+        user_email = await _get_user_email_from_graph(user_id)
 
         if not user_email:
             raise HTTPException(
@@ -167,7 +167,7 @@ async def list_tokens(request: Request) -> TokenListResponse:
         ORDER BY token.created_at DESC
         """
 
-        result = organizations_graph.query(query, {"user_email": user_email})
+        result = await organizations_graph.query(query, {"user_email": user_email})
 
         tokens = []
         if result.result_set:
@@ -213,7 +213,7 @@ async def delete_token(request: Request, token_id: str) -> JSONResponse:
         RETURN token
         """
 
-        result = organizations_graph.query(check_query, {
+        result = await organizations_graph.query(check_query, {
             "user_email": user_email,
             "token_id": token_id
         })
@@ -230,7 +230,7 @@ async def delete_token(request: Request, token_id: str) -> JSONResponse:
         DELETE r, token
         """
 
-        organizations_graph.query(delete_query, {
+        await organizations_graph.query(delete_query, {
             "user_email": user_email,
             "token_id": token_id
         })
@@ -252,7 +252,7 @@ async def delete_token(request: Request, token_id: str) -> JSONResponse:
         ) from e
 
 
-def validate_api_token(token: str) -> Optional[str]:
+async def validate_api_token(token: str) -> Optional[str]:
     """
     Validate an API token and return the associated user email if valid.
     This function is used by the authentication system.
@@ -272,7 +272,7 @@ def validate_api_token(token: str) -> Optional[str]:
         LIMIT 1
         """
 
-        result = organizations_graph.query(query, {"token_hash": token_hash})
+        result = await organizations_graph.query(query, {"token_hash": token_hash})
 
         if result.result_set:
             user_email = result.result_set[0][0]

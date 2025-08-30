@@ -471,21 +471,3 @@
   justify-content: flex-end;
   margin-top: 2em;
 }
-
-.user-profile-action {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  padding: 0.8em 1em;
-  cursor: pointer;
-  font-size: 0.9em;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  text-align: left;
-  width: 100%;
-}
-
-.user-profile-action:hover {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-}

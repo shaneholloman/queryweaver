@@ -267,59 +267,6 @@ async def validate_user(request: Request) -> Tuple[Optional[Dict[str, Any]], boo
         logging.error("Unexpected error in validate_user: %s", e)
         return None, False
 
-async def validate_api_token_user(token: str) -> Tuple[Optional[Dict[str, Any]], bool]:
-    """
-    Validate an API token and return user info if valid.
-    Returns (user_info, is_authenticated).
-    """
-    try:
-        if not token:
-            return None, False
-
-        # Import here to avoid circular imports
-        from api.routes.tokens import validate_api_token
-
-        user_email = validate_api_token(token)
-        if not user_email:
-            return None, False
-
-        # Get user info from Organizations graph
-        organizations_graph = db.select_graph("Organizations")
-
-        query = """
-        MATCH (user:User {email: $email})<-[:AUTHENTICATES]-(identity:Identity)
-        RETURN user, identity
-        LIMIT 1
-        """
-
-        result = organizations_graph.query(query, {"email": user_email})
-
-        if result.result_set:
-            user = result.result_set[0][0]
-            identity = result.result_set[0][1]
-
-            # Create user_info similar to OAuth format
-            first_name = user.properties.get('first_name', '')
-            last_name = user.properties.get('last_name', '')
-            full_name = f"{first_name} {last_name}".strip()
-
-            user_info = {
-                "id": identity.properties.get("provider_user_id", user_email),
-                "email": user_email,
-                "name": full_name,
-                "picture": identity.properties.get("picture", ""),
-                "provider": "api_token",
-            }
-
-            return user_info, True
-
-        return None, False
-
-    except Exception as e:
-        logging.error("Error validating API token user: %s", e)
-        return None, False
-
-
 def token_required(func):
     """Decorator to protect FastAPI routes with token authentication.
     Automatically refreshes tokens if expired.
@@ -329,26 +276,6 @@ def token_required(func):
     @wraps(func)
     async def wrapper(request: Request, *args, **kwargs):
         try:
-            # First, try API token authentication
-            auth_header = request.headers.get("Authorization")
-            if auth_header and auth_header.startswith("Bearer "):
-                api_token = auth_header[7:]  # Remove "Bearer " prefix
-                user_info, is_authenticated = await validate_api_token_user(api_token)
-
-                if is_authenticated:
-                    # Attach user_id to request.state
-                    request.state.user_id = user_info.get("id")
-                    if not request.state.user_id:
-                        raise HTTPException(
-                            status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="Unauthorized - Invalid token user"
-                        )
-
-                    # Also store user_info for compatibility
-                    request.state.user_info = user_info
-                    return await func(request, *args, **kwargs)
-
-            # Fall back to OAuth session authentication
             user_info, is_authenticated = await validate_user(request)
 
             if not is_authenticated:
@@ -370,8 +297,6 @@ def token_required(func):
                     detail="Unauthorized - Invalid user"
                 )
 
-            # Also store user_info for compatibility
-            request.state.user_info = user_info
             return await func(request, *args, **kwargs)
 
         except HTTPException:
