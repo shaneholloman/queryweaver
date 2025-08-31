@@ -137,6 +137,10 @@ Create `.env` file from `.env.example` and configure these essential variables:
 # REQUIRED for FastAPI to start
 FASTAPI_SECRET_KEY=your_super_secret_key_here
 
+# Optional: set application environment (development, staging, production)
+# Default: development (affects session cookie security for OAuth)
+APP_ENV=development
+
 # REQUIRED for database connection (preferred)
 # Use a single connection string if possible. Example:
 # FALKORDB_URL=redis://localhost:6379/0
@@ -158,6 +162,7 @@ FASTAPI_SECRET_KEY=your_super_secret_key_here
 **For testing in CI/development**, minimal `.env` setup:
 ```bash
 FASTAPI_SECRET_KEY=test-secret-key
+APP_ENV=development
 FASTAPI_DEBUG=False
 FALKORDB_HOST=localhost
 FALKORDB_PORT=6379

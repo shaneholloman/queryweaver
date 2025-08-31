@@ -58,12 +58,19 @@ def create_app():
     app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
     # Add session middleware with explicit settings to ensure OAuth state persists
+    # Detect if we're running on HTTPS (staging/production) vs HTTP (development)
+    app_env = os.getenv("APP_ENV", "").lower()
+    if app_env in ("production", "staging"):
+        is_https = True
+    else:
+        is_https = False
+
     app.add_middleware(
         SessionMiddleware,
         secret_key=SECRET_KEY,
         session_cookie="qw_session",
         same_site="lax",  # allow top-level OAuth GET redirects to send cookies
-        https_only=False,  # allow http on localhost in development
+        https_only=is_https,  # True for HTTPS environments (staging/prod), False for HTTP dev
         max_age=60 * 60 * 24 * 14,  # 14 days - measured by seconds
     )
 

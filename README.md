@@ -39,6 +39,7 @@ If you prefer to pass variables on the command line, use `-e` flags (less conven
 
 ```bash
 docker run -p 5000:5000 -it \
+  -e APP_ENV=production \
   -e FASTAPI_SECRET_KEY=your_super_secret_key_here \
   -e GOOGLE_CLIENT_ID=your_google_client_id \
   -e GOOGLE_CLIENT_SECRET=your_google_client_secret \
@@ -83,7 +84,7 @@ pipenv sync --dev
 
 # Create a local environment file
 cp .env.example .env
-# Edit .env with your values
+# Edit .env with your values (set APP_ENV=development for local development)
 ```
 
 ### Run the app locally
@@ -121,6 +122,20 @@ QueryWeaver supports Google and GitHub OAuth. Create OAuth credentials for each 
 
 - Google: set authorized origin and callback `http://localhost:5000/login/google/authorized`
 - GitHub: set homepage and callback `http://localhost:5000/login/github/authorized`
+
+#### Environment-specific OAuth settings
+
+For production/staging deployments, set `APP_ENV=production` or `APP_ENV=staging` in your environment to enable secure session cookies (HTTPS-only). This prevents OAuth CSRF state mismatch errors.
+
+```bash
+# For production/staging (enables HTTPS-only session cookies)
+APP_ENV=production
+
+# For development (allows HTTP session cookies)
+APP_ENV=development
+```
+
+**Important**: If you're getting "mismatching_state: CSRF Warning!" errors on staging/production, ensure `APP_ENV` is set to `production` or `staging` to enable secure session handling.
 
 ## MCP server: host or connect (optional)
 
@@ -221,6 +236,7 @@ GitHub Actions run unit and E2E tests on pushes and pull requests. Failures capt
 - FalkorDB connection issues: start the DB helper `make docker-falkordb` or check network/host settings.
 - Playwright/browser failures: install browsers with `pipenv run playwright install` and ensure system deps are present.
 - Missing environment variables: copy `.env.example` and fill required values.
+- **OAuth "mismatching_state: CSRF Warning!" errors**: Set `APP_ENV=production` (or `staging`) in your environment for HTTPS deployments, or `APP_ENV=development` for HTTP development environments. This ensures session cookies are configured correctly for your deployment type.
 
 ## Project layout (high level)
 
