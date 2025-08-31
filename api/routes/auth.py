@@ -303,6 +303,8 @@ async def logout(request: Request) -> RedirectResponse:
         resp.delete_cookie("api_token")
         await delete_user_token(api_token)
 
+    request.session.pop("user_id", None)
+
     return resp
 
 # ---- Hook for app factory ----
