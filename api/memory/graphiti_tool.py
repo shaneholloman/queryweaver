@@ -502,21 +502,24 @@ class MemoryTool:
 
         """
         driver = self.graphiti_client.driver
-        query = f"""
+        query = """
                 MATCH (n)
-                WHERE NOT (n:Entity AND n.name = 'User {self.user_id}')
-                WITH n ORDER BY n.timestamp ASC
-                SKIP {size}
+                WHERE NOT (n:Entity AND n.name = $pinned_user)
+                WITH n ORDER BY coalesce(n.timestamp, 0) DESC
+                SKIP $keep
                 DETACH DELETE n
                 """
         try:
-            result, _, _ = await driver.execute_query(query)
-
-            return len(result)
+            _, _, _stats = await driver.execute_query(
+                query,
+                pinned_user=f"User {self.user_id}",
+                keep=int(size),
+            )
+            # Stats may not be available; return 0 on success path
+            return 0
         except Exception as e:
             print(f"Error cleaning memory: {e}")
             return 0
-
     async def summarize_conversation(self, conversation: Dict[str, Any]) -> Dict[str, Any]:
         """
         Use LLM to summarize the conversation and extract database-oriented insights.
