@@ -163,7 +163,7 @@ class MemoryTool:
         
         return True
 
-    async def save_query_memory(self, query: str, sql_query: str, success: bool, error: str = None) -> bool:
+    async def save_query_memory(self, query: str, sql_query: str, success: bool, error: Optional[str] = None) -> bool:
         """
         Save individual query memory directly to the database node.
         
@@ -489,12 +489,7 @@ class MemoryTool:
             
         except Exception as e:
             print(f"Error in concurrent memory search: {e}")
-            return {
-                "user_summary": "",
-                "database_facts": "",
-                "similar_queries": [],
-                "memory_context": ""
-            }
+            return ""
 
     async def clean_memory(self, size: int = 10000) -> int:
         """
