@@ -260,7 +260,7 @@ async def find(
 
     logging.info(
         "Calling LLM to find relevant tables/columns for query: %s",
-        user_query  # nosemgrep: python.lang.security.audit.direct-use-of-jinja2.direct-use-of-jinja2
+        user_query
     )
 
     completion_result = completion(

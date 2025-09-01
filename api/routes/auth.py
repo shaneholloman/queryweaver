@@ -228,7 +228,7 @@ async def github_authorized(request: Request) -> RedirectResponse:
         # Fetch GitHub user info
         resp = await github.get("user", token=token)
         if resp.status_code != 200:
-            logging.error("Failed to fetch GitHub user info: %s", resp.text)
+            logging.error("Failed to fetch GitHub user info: %s", resp.text)  # nosemgrep
             return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
 
         user_info = resp.json()

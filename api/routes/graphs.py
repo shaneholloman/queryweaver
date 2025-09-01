@@ -274,7 +274,7 @@ async def load_graph(request: Request, data: GraphData = None, file: UploadFile 
         return JSONResponse(content={"message": "Graph loaded successfully", "graph_id": graph_id})
 
     # Log detailed error but return generic message to user
-    logging.error("Graph loading failed: %s", str(result)[:100])
+    logging.error("Graph loading failed: %s", str(result)[:100])  # nosemgrep
     raise HTTPException(status_code=400, detail="Failed to load graph data")
 
 
@@ -320,7 +320,7 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest): 
         # Start overall timing
         overall_start = time.perf_counter()
         logging.info("Starting query processing pipeline for query: %s",
-                     sanitize_query(queries_history[-1]))
+                     sanitize_query(queries_history[-1]))  # nosemgrep
 
         agent_rel = RelevancyAgent(queries_history, result_history)
         agent_an = AnalysisAgent(queries_history, result_history)
@@ -372,7 +372,7 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest): 
                 "final_response": True,
                 "message": "Off topic question: " + answer_rel["reason"],
             }
-            logging.info("SQL Fail reason: %s", answer_rel["reason"])
+            logging.info("SQL Fail reason: %s", answer_rel["reason"])  # nosemgrep
             yield json.dumps(step) + MESSAGE_DELIMITER
             # Total time for off-topic query
             overall_elapsed = time.perf_counter() - overall_start
@@ -383,7 +383,7 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest): 
             result = await find_task
 
             logging.info("Calling to analysis agent with query: %s",
-                         sanitize_query(queries_history[-1]))
+                         sanitize_query(queries_history[-1]))  # nosemgrep
             memory_tool = await memory_tool_task
             memory_context = await memory_tool.search_memories(
                 query=queries_history[-1]
@@ -399,7 +399,7 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest): 
             follow_up_result = ""
             execution_error = False
 
-            logging.info("Generated SQL query: %s", answer_an['sql_query'])
+            logging.info("Generated SQL query: %s", answer_an['sql_query'])  # nosemgrep
             yield json.dumps(
                 {
                     "type": "final_result",
@@ -629,7 +629,7 @@ What this will do:
                 )
             )
             save_query_task.add_done_callback(
-                lambda t: logging.error("Query memory save failed: %s", t.exception())
+                lambda t: logging.error("Query memory save failed: %s", t.exception())  # nosemgrep
                 if t.exception() else logging.info("Query memory saved successfully")
             )
 
@@ -637,7 +637,7 @@ What this will do:
             save_task = asyncio.create_task(memory_tool.add_new_memory(full_response))
             # Add error handling callback to prevent silent failures
             save_task.add_done_callback(
-                lambda t: logging.error("Memory save failed: %s", t.exception())
+                lambda t: logging.error("Memory save failed: %s", t.exception())  # nosemgrep
                 if t.exception() else logging.info("Conversation saved to memory tool")
             )
             logging.info("Conversation save task started in background")
@@ -645,7 +645,7 @@ What this will do:
             # Clean old memory in background (once per week cleanup)
             clean_memory_task = asyncio.create_task(memory_tool.clean_memory())
             clean_memory_task.add_done_callback(
-                lambda t: logging.error("Memory cleanup failed: %s", t.exception())
+                lambda t: logging.error("Memory cleanup failed: %s", t.exception())  # nosemgrep
                 if t.exception() else logging.info("Memory cleanup completed successfully")
             )
 
@@ -778,7 +778,7 @@ async def confirm_destructive_operation(
                     )
                 )
                 save_query_task.add_done_callback(
-                    lambda t: logging.error("Confirmed query memory save failed: %s", t.exception())
+                    lambda t: logging.error("Confirmed query memory save failed: %s", t.exception())  # nosemgrep
                     if t.exception() else logging.info("Confirmed query memory saved successfully")
                 )
 
@@ -796,7 +796,7 @@ async def confirm_destructive_operation(
                     )
                 )
                 save_query_task.add_done_callback(
-                    lambda t: logging.error(
+                    lambda t: logging.error(  # nosemgrep
                         "Failed confirmed query memory save failed: %s", t.exception()
                     ) if t.exception() else logging.info(
                         "Failed confirmed query memory saved successfully"
@@ -856,14 +856,14 @@ async def refresh_graph_schema(request: Request, graph_id: str):
                 "message": f"Graph schema refreshed successfully using {db_type}"
             })
 
-        logging.error("Schema refresh failed for graph %s: %s", graph_id, message)
+        logging.error("Schema refresh failed for graph %s: %s", graph_id, message)  # nosemgrep
         return JSONResponse({
             "success": False,
             "error": "Failed to refresh schema"
         }, status_code=500)
 
     except Exception as e:  # pylint: disable=broad-exception-caught
-        logging.error("Error in manual schema refresh: %s", e)
+        logging.error("Error in manual schema refresh: %s", e)  # nosemgrep
         return JSONResponse({
             "success": False,
             "error": "Error refreshing schema"

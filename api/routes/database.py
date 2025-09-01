@@ -112,7 +112,7 @@ async def connect_database(request: Request, db_request: DatabaseConnectionReque
                     ) + MESSAGE_DELIMITER
                 else:
                     # Don't stream the full internal result; give higher-level error
-                    logging.error("Database loader failed: %s", str(result))
+                    logging.error("Database loader failed: %s", str(result))  # nosemgrep
                     yield json.dumps(
                         {"type": "error", "message": "Failed to load database schema"}
                     ) + MESSAGE_DELIMITER

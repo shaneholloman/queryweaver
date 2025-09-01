@@ -430,7 +430,7 @@ class PostgresLoader(BaseLoader):
             Tuple of (success, message)
         """
         try:
-            logging.info("Schema modification detected. Refreshing graph schema for: %s", graph_id)  # nosemgrep
+            logging.info("Schema modification detected. Refreshing graph schema for: %s", graph_id)
 
             # Import here to avoid circular imports
             from api.extensions import db  # pylint: disable=import-error,import-outside-toplevel
@@ -456,12 +456,12 @@ class PostgresLoader(BaseLoader):
                 logging.info("Graph schema refreshed successfully.")
                 return True, message
 
-            logging.error("Schema refresh failed for graph %s: %s", graph_id, message)  # nosemgrep
+            logging.error("Schema refresh failed for graph %s: %s", graph_id, message)
             return False, "Failed to reload schema"
 
         except Exception as e:  # pylint: disable=broad-exception-caught
             # Log the error and return failure
-            logging.error("Error refreshing graph schema: %s", str(e))  # nosemgrep
+            logging.error("Error refreshing graph schema: %s", str(e))
             error_msg = "Error refreshing graph schema"
             logging.error(error_msg)
             return False, error_msg
