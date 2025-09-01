@@ -489,9 +489,7 @@ class MySQLLoader(BaseLoader):
                 logging.info("Graph schema refreshed successfully.")
                 return True, message
 
-            # Sanitize inputs to prevent log injection
-            sanitized_message = message.replace('\n', ' ').replace('\r', ' ') if message else 'Unknown error'
-            logging.error("Schema refresh failed: %s", sanitized_message)
+            logging.error("Schema refresh failed")
             return False, "Failed to reload schema"
 
         except Exception as e:  # pylint: disable=broad-exception-caught
