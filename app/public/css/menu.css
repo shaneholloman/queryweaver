@@ -194,6 +194,9 @@
   justify-content: center;
   color: var(--text-primary);
   background-color: transparent;
+  pointer-events: auto;
+  border: none;
+  cursor: pointer;
 }
 
 #graph-select:focus {
