@@ -44,8 +44,8 @@ class ChatRequest(BaseModel):
         BaseModel (_type_): _description_
     """
     chat: list[str]
-    result: list[str] = None
-    instructions: str = None
+    result: list[str] | None = None
+    instructions: str | None = None
 
 
 class ConfirmRequest(BaseModel):
@@ -413,7 +413,7 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):
                 }
             ) + MESSAGE_DELIMITER
 
-            # If the SQL query is valid, execute it using the postgress database db_url
+            # If the SQL query is valid, execute it using the postgres database db_url
             if answer_an["is_sql_translatable"]:
                 # Check if this is a destructive operation that requires confirmation
                 sql_query = answer_an["sql_query"]
@@ -475,7 +475,9 @@ What this will do:
                     return  # Stop here and wait for user confirmation
 
                 try:
-                    step = {"type": "reasoning_step", "final_response": False, "message": "Step 2: Executing SQL query"}
+                    step = {"type": "reasoning_step",
+                            "final_response": False,
+                            "message": "Step 2: Executing SQL query"}
                     yield json.dumps(step) + MESSAGE_DELIMITER
 
                     # Check if this query modifies the database schema using the appropriate loader
@@ -606,7 +608,7 @@ What this will do:
                 "generated_sql": answer_an.get('sql_query', ""),
                 "answer": final_answer
             }
-            
+
             # Add error information if SQL execution failed
             if execution_error:
                 full_response["error"] = execution_error
@@ -614,7 +616,7 @@ What this will do:
             else:
                 full_response["success"] = True
 
-            
+
             # Save query to memory
             save_query_task = asyncio.create_task(
                 memory_tool.save_query_memory(
@@ -628,13 +630,13 @@ What this will do:
                 lambda t: logging.error(f"Query memory save failed: {t.exception()}") 
                 if t.exception() else logging.info("Query memory saved successfully")
             )
-            
+
             # Save conversation with memory tool (run in background)
             save_task = asyncio.create_task(memory_tool.add_new_memory(full_response))
             # Add error handling callback to prevent silent failures
             save_task.add_done_callback(lambda t: logging.error(f"Memory save failed: {t.exception()}") if t.exception() else logging.info("Conversation saved to memory tool"))
             logging.info("Conversation save task started in background")
-            
+
             # Clean old memory in background (once per week cleanup)
             clean_memory_task = asyncio.create_task(memory_tool.clean_memory())
             clean_memory_task.add_done_callback(
@@ -678,7 +680,7 @@ async def confirm_destructive_operation(
     async def generate_confirmation():
         # Create memory tool for saving query results
         memory_tool = await MemoryTool.create(request.state.user_id, graph_id)
-        
+
         if confirmation == "CONFIRM":
             try:
                 db_description, db_url = await get_db_description(graph_id)
@@ -776,7 +778,7 @@ async def confirm_destructive_operation(
 
             except Exception as e:
                 logging.error("Error executing confirmed SQL query: %s", str(e))
-                
+
                 # Save failed confirmed query to memory
                 save_query_task = asyncio.create_task(
                     memory_tool.save_query_memory(
@@ -790,7 +792,7 @@ async def confirm_destructive_operation(
                     lambda t: logging.error(f"Failed confirmed query memory save failed: {t.exception()}") 
                     if t.exception() else logging.info("Failed confirmed query memory saved successfully")
                 )
-                
+
                 yield json.dumps(
                     {"type": "error", "message": "Error executing query"}
                 ) + MESSAGE_DELIMITER
