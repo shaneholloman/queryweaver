@@ -147,8 +147,10 @@ class PostgresLoader(BaseLoader):
                          f"Found {len(entities)} tables.")
 
         except psycopg2.Error as e:
-            yield False, f"PostgreSQL connection error: {str(e)}"
+            logging.error("PostgreSQL connection error: %s", e)
+            raise PostgreSQLConnectionError(f"PostgreSQL connection error: {str(e)}") from e
         except Exception as e:  # pylint: disable=broad-exception-caught
+            logging.error("Error loading PostgreSQL schema: %s", e)
             yield False, f"Error loading PostgreSQL schema: {str(e)}"
 
     @staticmethod

@@ -206,9 +206,9 @@ class MySQLLoader(BaseLoader):
         except pymysql.MySQLError as e:
             logging.error("MySQL connection error: %s", e)
             raise MySQLConnectionError(f"MySQL connection error: {str(e)}") from e
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             logging.error("Error loading MySQL schema: %s", e)
-            raise MySQLQueryError(f"Error loading MySQL schema: {str(e)}") from e
+            yield False, f"Error loading MySQL schema: {str(e)}"
 
     @staticmethod
     def extract_tables_info(cursor, db_name: str) -> Dict[str, Any]:

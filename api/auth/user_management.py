@@ -79,7 +79,6 @@ async def ensure_user_in_organizations(  # pylint: disable=too-many-arguments
     name: str,
     provider: str,
     api_token: str,
-    *,
     picture: str = None
 ):
     """
@@ -260,7 +259,7 @@ def _validate_user_input(provider_user_id: str, email: str, provider: str):
         return False, None
 
     # Validate provider is in allowed list
-    allowed_providers = ["google", "github"]
+    allowed_providers = ["google", "github", "api"]
     if provider not in allowed_providers:
         logging.error("Invalid provider: %s", provider)
         return False, None
