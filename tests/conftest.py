@@ -20,22 +20,18 @@ def fastapi_app():
     """Start the FastAPI application for testing."""
     
     # Ensure required environment variables are set for testing
-    if not os.getenv('FALKORDB_HOST'):
-        os.environ['FALKORDB_HOST'] = 'localhost'
-    if not os.getenv('FALKORDB_PORT'):
-        os.environ['FALKORDB_PORT'] = '6379'
-    if not os.getenv('FASTAPI_SECRET_KEY'):
-        os.environ['FASTAPI_SECRET_KEY'] = 'test-secret-key-for-e2e-tests'
-    
-    # Set up mock OAuth credentials for testing
-    if not os.getenv('GOOGLE_CLIENT_ID'):
-        os.environ['GOOGLE_CLIENT_ID'] = 'test-google-client-id'
-    if not os.getenv('GOOGLE_CLIENT_SECRET'):
-        os.environ['GOOGLE_CLIENT_SECRET'] = 'test-google-client-secret'
-    if not os.getenv('GITHUB_CLIENT_ID'):
-        os.environ['GITHUB_CLIENT_ID'] = 'test-github-client-id'
-    if not os.getenv('GITHUB_CLIENT_SECRET'):
-        os.environ['GITHUB_CLIENT_SECRET'] = 'test-github-client-secret'
+    env_defaults = {
+        'FALKORDB_HOST': 'localhost',
+        'FALKORDB_PORT': '6379',
+        'FASTAPI_SECRET_KEY': 'test-secret-key-for-e2e-tests',
+        'GOOGLE_CLIENT_ID': 'test-google-client-id',
+        'GOOGLE_CLIENT_SECRET': 'test-google-client-secret',
+        'GITHUB_CLIENT_ID': 'test-github-client-id',
+        'GITHUB_CLIENT_SECRET': 'test-github-client-secret',
+    }
+    for var, default in env_defaults.items():
+        if not os.getenv(var):
+            os.environ[var] = default
 
     # Get the project root directory (parent of tests directory)
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -107,7 +103,9 @@ def authenticated_page(page, app_url):
         'value': 'test-api-token-for-e2e-tests',
         'domain': 'localhost',
         'path': '/',
-        'httpOnly': True
+        'httpOnly': True,
+        'secure': False,
+        'sameSite': 'Lax'
     }])
     
     page.app_url = app_url

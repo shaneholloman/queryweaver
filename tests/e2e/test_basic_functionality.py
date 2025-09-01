@@ -73,7 +73,7 @@ class TestBasicFunctionality:
         # Check that the page has some interactive elements
         interactive_elements = page.query_selector_all("button, input, select, textarea")
         # Even unauthenticated pages should have some UI elements
-        assert len(interactive_elements) >= 0  # At least login buttons should exist
+        assert len(interactive_elements) >= 1  # At least login buttons should exist
 
     def test_responsive_design(self, page_with_base_url):
         """Test responsive design at different screen sizes."""
