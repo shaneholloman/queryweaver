@@ -91,7 +91,7 @@ def page_with_base_url(page, app_url):
     """Provide a page with app_url attribute set."""
     # Attach app_url to the page object for test code that expects it
     page.app_url = app_url
-    page.goto(app_url)
+    page.goto(app_url, wait_until="domcontentloaded", timeout=60000)
     yield page
 
 
@@ -111,5 +111,5 @@ def authenticated_page(page, app_url):
     }])
     
     page.app_url = app_url
-    page.goto(app_url)
+    page.goto(app_url, wait_until="domcontentloaded", timeout=60000)
     yield page

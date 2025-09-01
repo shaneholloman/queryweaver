@@ -19,7 +19,8 @@ class HomePage(BasePage):
     def navigate_to_home(self):
         """Navigate to the home page."""
         self.navigate_to("/chat")
-        self.wait_for_page_load()
+        # Wait for the page content to be loaded, not all resources
+        self.page.wait_for_load_state("domcontentloaded", timeout=30000)
 
     def is_authenticated(self):
         """Check if user is authenticated."""
