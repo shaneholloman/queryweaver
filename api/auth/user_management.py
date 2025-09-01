@@ -8,6 +8,7 @@ from functools import wraps
 from typing import Tuple, Optional, Dict, Any
 
 from fastapi import Request, HTTPException, status
+from pydantic import BaseModel
 from api.extensions import db
 
 # Get secret key for sessions
@@ -16,6 +17,11 @@ if not SECRET_KEY:
     SECRET_KEY = secrets.token_hex(32)
     logging.warning("FASTAPI_SECRET_KEY not set, using generated key. Set this in production!")
 
+
+class IdentityInfo(BaseModel):
+    identity: Dict[str, Any]
+    user: Dict[str, Any]
+    new_identity: bool
 
 async def _get_user_info(api_token: str) -> Optional[Dict[str, Any]]:
     """
@@ -72,7 +78,14 @@ async def delete_user_token(api_token: str):
         logging.error("Error deleting user token: %s", e)
 
 
-async def ensure_user_in_organizations(provider_user_id: str, email: str, name: str, provider: str, api_token: str, picture: str = None):
+async def ensure_user_in_organizations(
+    provider_user_id: str,
+    email: str,
+    name: str,
+    provider: str,
+    api_token: str,
+    picture: str | None = None,
+) -> tuple[bool, Optional[IdentityInfo]]:
     """
     Check if identity exists in Organizations graph, create if not.
     Creates separate Identity and User nodes with proper relationships.
@@ -158,27 +171,27 @@ async def ensure_user_in_organizations(provider_user_id: str, email: str, name: 
         })
 
         if result.result_set:
-            identity = result.result_set[0][0]
-            user = result.result_set[0][1]
-            is_new_identity = result.result_set[0][2]
-            had_other_identities = result.result_set[0][3]
+            identity: dict[str, Any] = result.result_set[0][0]
+            user: dict[str, Any] = result.result_set[0][1]
+            is_new_identity: bool = result.result_set[0][2]
+            had_other_identities: bool = result.result_set[0][3]
 
             # Determine the type of operation for logging
             if is_new_identity and not had_other_identities:
                 # Brand new user (first identity)
                 logging.info("NEW USER CREATED: provider=%s, provider_user_id=%s, "
                            "email=%s, name=%s", provider, provider_user_id, email, name)
-                return True, {"identity": identity, "user": user}
+                return True, {"identity": identity, "user": user, "new_identity": is_new_identity}
             elif is_new_identity and had_other_identities:
                 # New identity for existing user (cross-provider linking)
                 logging.info("NEW IDENTITY LINKED TO EXISTING USER: provider=%s, "
                            "provider_user_id=%s, email=%s, name=%s",
                            provider, provider_user_id, email, name)
-                return True, {"identity": identity, "user": user}
+                return True, {"identity": identity, "user": user, "new_identity": is_new_identity}
             else:
                 # Existing identity login
                 logging.info("Existing identity found: provider=%s, email=%s", provider, email)
-                return False, {"identity": identity, "user": user}
+                return False, {"identity": identity, "user": user, "new_identity": is_new_identity}
         else:
             logging.error("Failed to create/update identity and user: email=%s", email)
             return False, None

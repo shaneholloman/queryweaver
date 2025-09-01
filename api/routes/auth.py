@@ -181,7 +181,7 @@ async def _create_email_user(first_name: str, last_name: str, email: str, passwo
         logging.error("Error creating email user: %s", e)
         return False, "Internal error"
 
-def _authenticate_email_user(email: str, password: str):
+async def _authenticate_email_user(email: str, password: str):
     """Authenticate an email user."""
     try:
         organizations_graph = db.select_graph("Organizations")
@@ -192,7 +192,7 @@ def _authenticate_email_user(email: str, password: str):
         RETURN i, u
         """
 
-        result = organizations_graph.query(query, {"email": email})
+        result = await organizations_graph.query(query, {"email": email})
 
         if not result.result_set:
             return False, "Invalid email or password"
@@ -210,7 +210,7 @@ def _authenticate_email_user(email: str, password: str):
         MATCH (i:Identity {provider: 'email', email: $email})
         SET i.last_login = timestamp()
         """
-        organizations_graph.query(update_query, {"email": email})
+        await organizations_graph.query(update_query, {"email": email})
 
         logging.info("EMAIL USER AUTHENTICATED: email=%r", _sanitize_for_log(email))
         return True, {"identity": identity, "user": user}
@@ -262,18 +262,23 @@ async def email_signup(request: Request, signup_data: EmailSignupRequest) -> Red
         password_hash = _hash_password(password)
 
         # Create user
-        success, result = await _create_email_user(first_name, last_name, email, password_hash)
+        # success, result = await _create_email_user(first_name, last_name, email, password_hash)
 
-        if not success:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=result
-            )
+        # if not success:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_400_BAD_REQUEST,
+        #         detail=result
+        #     )
 
         api_token = secrets.token_urlsafe(32)
         # Create organization association
-        await ensure_user_in_organizations(email, email, f"{first_name} {last_name}", 
+        success, user_info = await ensure_user_in_organizations(email, email, f"{first_name} {last_name}",
                                            "email", api_token)
+
+        if success and user_info and user_info.new_identity:
+            logging.info("New user created: %s", _sanitize_for_log(email))
+        else:
+            logging.info("User already exists: %s", _sanitize_for_log(email))
 
         logging.info("User registration successful: %s", _sanitize_for_log(email))
 
@@ -322,7 +327,7 @@ async def email_login(request: Request, login_data: EmailLoginRequest) -> JSONRe
             )
 
         # Authenticate user
-        success, result = _authenticate_email_user(email, password)
+        success, result = await _authenticate_email_user(email, password)
 
         if not success:
             return JSONResponse(
@@ -336,8 +341,16 @@ async def email_login(request: Request, login_data: EmailLoginRequest) -> JSONRe
             identity_node = result.get("identity")
 
             # Access node properties correctly
-            user_props = user_node.properties if user_node and hasattr(user_node, 'properties') else {}
-            identity_props = identity_node.properties if identity_node and hasattr(identity_node, 'properties') else {}
+            user_props = (
+                user_node.properties
+                if user_node and hasattr(user_node, "properties")
+                else {}
+            )
+            identity_props = (
+                identity_node.properties
+                if identity_node and hasattr(identity_node, "properties")
+                else {}
+            )
 
             request.session["user_info"] = {
                 "id": identity_props.get("provider_user_id", email),
