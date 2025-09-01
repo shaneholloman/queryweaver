@@ -19,8 +19,10 @@ import {
     setupCustomDropdown
 } from './modules/ui';
 import { setupAuthenticationModal, setupDatabaseModal } from './modules/modals';
-import { resizeGraph, showGraph } from './modules/schema';
+import { showGraph } from './modules/schema';
+import { setupTokenManagement } from './modules/tokens';
 import { initLeftToolbar } from './modules/left_toolbar';
+import { resizeGraph } from './modules/schema';
 
 async function loadAndShowGraph(selected: string | undefined) {
     if (!selected) return;
@@ -106,6 +108,7 @@ function setupUIComponents() {
     setupThemeToggle();
     setupAuthenticationModal();
     setupDatabaseModal();
+    setupTokenManagement();
     setupToolbar();
     // initialize left toolbar behavior (burger, responsive default)
     initLeftToolbar();
