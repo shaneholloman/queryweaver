@@ -463,9 +463,7 @@ class MySQLLoader(BaseLoader):
             Tuple of (success, message)
         """
         try:
-            # Sanitize graph_id to prevent log injection
-            sanitized_graph_id = graph_id.replace('\n', ' ').replace('\r', ' ') if graph_id else 'Unknown'
-            logging.info("Schema modification detected. Refreshing graph schema for: %s", sanitized_graph_id)
+            logging.info("Schema modification detected. Refreshing graph schema.")
 
             # Import here to avoid circular imports
             from api.extensions import db  # pylint: disable=import-error,import-outside-toplevel
@@ -492,9 +490,8 @@ class MySQLLoader(BaseLoader):
                 return True, message
 
             # Sanitize inputs to prevent log injection
-            sanitized_graph_id = graph_id.replace('\n', ' ').replace('\r', ' ') if graph_id else 'Unknown'
             sanitized_message = message.replace('\n', ' ').replace('\r', ' ') if message else 'Unknown error'
-            logging.error("Schema refresh failed for graph %s: %s", sanitized_graph_id, sanitized_message)
+            logging.error("Schema refresh failed: %s", sanitized_message)
             return False, "Failed to reload schema"
 
         except Exception as e:  # pylint: disable=broad-exception-caught
