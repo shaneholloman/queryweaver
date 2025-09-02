@@ -3,7 +3,6 @@
 import logging
 import json
 import time
-from typing import Optional
 
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import StreamingResponse
@@ -26,7 +25,6 @@ class DatabaseConnectionRequest(BaseModel):
     """
 
     url: str
-    type: Optional[str] = None
 
 @database_router.post("/database", operation_id="connect_database")
 @token_required

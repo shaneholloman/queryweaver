@@ -199,7 +199,7 @@ class TestFileUpload:
         assert True, (
             f"Auth prompts: {len(login_buttons)} buttons, {len(auth_messages)} messages"
         )
-        assert "QueryWeaver" in page_title or current_url.endswith("/chat"), (
+        assert "QueryWeaver" in page_title or current_url.endswith("/"), (
             "Page loaded successfully"
         )
 
@@ -230,4 +230,4 @@ class TestFileUpload:
         assert True, f"Upload UI elements available: {available_elements}"
 
         # Ensure the page loaded successfully
-        assert "QueryWeaver" in page.title() or page.url.endswith("/chat"), "Page loaded successfully"
+        assert "QueryWeaver" in page.title() or page.url.endswith("/"), "Page loaded successfully"

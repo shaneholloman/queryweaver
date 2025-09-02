@@ -108,7 +108,7 @@
   border: 1px solid var(--text-secondary);
 }
 
-.google-login-modal {
+.login-modal {
   display: none;
   position: fixed;
   top: 0;
@@ -121,7 +121,7 @@
   justify-content: center;
 }
 
-.google-login-modal-content {
+.login-modal-content {
   background: var(--falkor-secondary);
   padding: 2em 3em;
   border-radius: 10px;
@@ -130,16 +130,121 @@
   color: var(--text-primary);
 }
 
-.google-login-modal-content h2 {
+.login-modal-content h2 {
   color: var(--text-primary);
   margin-bottom: 0.5em;
   font-size: 1.5em;
 }
 
-.google-login-modal-content p {
+.login-modal-content p {
   color: var(--text-secondary);
   margin-bottom: 1em;
   font-size: 1em;
+}
+
+/* Email Authentication Styles */
+.auth-divider {
+  margin: 1.5em 0;
+  position: relative;
+  text-align: center;
+}
+
+.auth-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.auth-divider span {
+  background: var(--falkor-secondary);
+  color: var(--text-secondary);
+  padding: 0 1em;
+  font-size: 0.9em;
+}
+
+.email-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  margin-top: 1em;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 0.75em;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1em;
+  background: var(--falkor-quaternary);
+  color: var(--text-primary);
+  box-sizing: border-box;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: #4285F4;
+  box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+}
+
+.auth-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.email-login-btn, .email-signup-btn {
+  width: 100%;
+  padding: 0.75em;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 0.5em;
+}
+
+.email-login-btn {
+  background: #5B6BC0;
+  color: #fff;
+}
+
+.email-login-btn:hover {
+  background: #4F5BA7;
+}
+
+.email-signup-btn {
+  background: #5B6BC0;
+  color: #fff;
+}
+
+.email-signup-btn:hover {
+  background: #4F5BA7;
+}
+
+.email-login-btn:disabled, .email-signup-btn:disabled {
+  background: #cccccc;
+  color: #888888;
+  cursor: not-allowed;
+}
+
+.auth-footer {
+  margin-top: 1.5em;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9em;
+}
+
+.signup-link {
+  color: #4285F4;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.signup-link:hover {
+  text-decoration: underline;
 }
 
 /* User Profile Dropdown */
