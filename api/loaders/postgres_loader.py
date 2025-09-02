@@ -148,10 +148,10 @@ class PostgresLoader(BaseLoader):
 
         except psycopg2.Error as e:
             logging.error("PostgreSQL connection error: %s", e)
-            raise PostgreSQLConnectionError(f"PostgreSQL connection error: {str(e)}") from e
+            yield False, f"PostgreSQL connection error: {str(e)}"
         except Exception as e:  # pylint: disable=broad-exception-caught
             logging.error("Error loading PostgreSQL schema: %s", e)
-            raise PostgreSQLConnectionError(f"Error loading PostgreSQL schema: {str(e)}") from e
+            yield False, f"Error loading PostgreSQL schema: {str(e)}"
 
     @staticmethod
     def extract_tables_info(cursor) -> Dict[str, Any]:
