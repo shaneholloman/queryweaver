@@ -19,7 +19,7 @@ import {
     setupCustomDropdown
 } from './modules/ui';
 import { setupAuthenticationModal, setupDatabaseModal } from './modules/modals';
-import { showGraph } from './modules/schema';
+import { resizeGraph, showGraph } from './modules/schema';
 import { setupTokenManagement } from './modules/tokens';
 import { initLeftToolbar } from './modules/left_toolbar';
 import { resizeGraph } from './modules/schema';

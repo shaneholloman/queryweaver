@@ -136,6 +136,10 @@ export function showGraph(data: any) {
         );
       }
     )
+    .onEngineStop(() => {
+      center();
+    })
+    .cooldownTime(2000);
 
   if (
     typeof (window as any).d3 !== "undefined" &&
@@ -211,23 +215,21 @@ export function showGraph(data: any) {
 }
 
 const center = () => {
-  const canvas = document.getElementById(
-    "schema-graph"
-  ) as HTMLCanvasElement;
+  const canvas = document.getElementById("schema-graph") as HTMLCanvasElement;
 
   if (canvas) {
     const rect = canvas.getBoundingClientRect();
     const minDimension = Math.min(rect.width, rect.height);
     const padding = minDimension * 0.1;
     graphInstance.zoomToFit(500, padding);
-  } 
-}
+  }
+};
+
 export function resizeGraph() {
   if (graphInstance) {
     const container = document.getElementById("schema-graph") as HTMLDivElement;
     if (container) {
       graphInstance.width(container.clientWidth).height(container.clientHeight);
-      center();
     }
   }
 }
