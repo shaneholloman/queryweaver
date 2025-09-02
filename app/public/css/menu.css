@@ -130,6 +130,22 @@
 #graph-select-refresh svg {
   height: 20px;
   width: 20px;
+#query-final-result-table {
+  border-collapse: collapse;
+}
+
+#query-final-result-table th,
+#query-final-result-table td {
+  padding: 4px 8px;
+}
+
+#query-final-result-table th:not(:first-child),
+#query-final-result-table td:not(:first-child) {
+  border-left: 1px solid var(--text-primary);
+}
+
+#query-final-result-table td {
+  border-top: 1px solid var(--text-primary);
 }
 
 #schema-graph {
