@@ -21,6 +21,14 @@ if not SECRET_KEY:
 
 
 class IdentityInfo(BaseModel):
+    """
+    Data model for storing identity information.
+
+    Attributes:
+        identity (Dict[str, Any]): Details about the identity provider and credentials.
+        user (Dict[str, Any]): Information about the associated user.
+        new_identity (bool): Whether this is a newly created identity.
+    """
     identity: Dict[str, Any]
     user: Dict[str, Any]
     new_identity: bool

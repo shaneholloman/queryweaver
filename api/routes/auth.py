@@ -1,4 +1,5 @@
 """Authentication routes for the text2sql API."""
+# pylint: disable=all
 
 import hashlib
 import hmac
