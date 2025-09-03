@@ -13,7 +13,7 @@ from api.extensions import db
 
 
 # Router
-tokens_router = APIRouter()
+tokens_router = APIRouter(tags=["API Tokens"])
 
 class TokenListItem(BaseModel):
     """Response model for token list items"""

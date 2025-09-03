@@ -26,7 +26,7 @@ from api.extensions import db
 
 
 # Router
-auth_router = APIRouter()
+auth_router = APIRouter(tags=["Authentication"])
 TEMPLATES_DIR = str((Path(__file__).resolve().parents[1] / "../app/templates").resolve())
 
 TEMPLATES_CACHE_DIR = "/tmp/jinja_cache"

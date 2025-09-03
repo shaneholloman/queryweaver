@@ -23,7 +23,7 @@ from api.memory.graphiti_tool import MemoryTool
 # Use the same delimiter as in the JavaScript
 MESSAGE_DELIMITER = "|||FALKORDB_MESSAGE_BOUNDARY|||"
 
-graphs_router = APIRouter()
+graphs_router = APIRouter(tags=["Graphs & Databases"])
 
 
 class GraphData(BaseModel):

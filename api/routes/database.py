@@ -12,7 +12,7 @@ from api.auth.user_management import token_required
 from api.loaders.postgres_loader import PostgresLoader
 from api.loaders.mysql_loader import MySQLLoader
 
-database_router = APIRouter()
+database_router = APIRouter(tags=["Database Connection"])
 
 # Use the same delimiter as in the JavaScript frontend for streaming chunks
 MESSAGE_DELIMITER = "|||FALKORDB_MESSAGE_BOUNDARY|||"
