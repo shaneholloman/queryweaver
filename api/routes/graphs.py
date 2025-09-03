@@ -26,6 +26,7 @@ MESSAGE_DELIMITER = "|||FALKORDB_MESSAGE_BOUNDARY|||"
 
 graphs_router = APIRouter()
 
+GENERAL_PREFIX = os.getenv("GENERAL_PREFIX")
 
 class GraphData(BaseModel):
     """Graph data model.
@@ -103,11 +104,9 @@ def _graph_name(request: Request, graph_id:str) -> str:
     if not graph_id:
         raise HTTPException(status_code=400,
                             detail="Invalid graph_id, must be less than 200 characters.")
-    general_prefix = os.getenv("GENERAL_PREFIX")
-
-    if general_prefix and graph_id.startswith(general_prefix):
+    if GENERAL_PREFIX and graph_id.startswith(GENERAL_PREFIX):
         return graph_id
-    
+
     return f"{request.state.user_id}_{graph_id}"
 
 @graphs_router.get("", operation_id="list_databases")
@@ -119,14 +118,13 @@ async def list_graphs(request: Request):
     user_id = request.state.user_id
     user_graphs = await db.list_graphs()
 
-    general_prefix = os.getenv("GENERAL_PREFIX")
     # Only include graphs that start with user_id + '_', and strip the prefix
     filtered_graphs = [graph[len(f"{user_id}_"):]
                        for graph in user_graphs if graph.startswith(f"{user_id}_")]
 
-    if general_prefix:
+    if GENERAL_PREFIX:
         demo_graphs = [graph for graph in user_graphs
-                       if graph.startswith(f"{general_prefix}")]
+                       if graph.startswith(GENERAL_PREFIX)]
         filtered_graphs = filtered_graphs + demo_graphs
 
     return JSONResponse(content=filtered_graphs)
@@ -403,12 +401,10 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest): 
                 sql_query = answer_an["sql_query"]
                 sql_type = sql_query.strip().split()[0].upper() if sql_query else ""
 
-                general_prefix = os.getenv("GENERAL_PREFIX")
-
                 destructive_ops = ['INSERT', 'UPDATE', 'DELETE', 'DROP',
                                   'CREATE', 'ALTER', 'TRUNCATE']
                 is_destructive = sql_type in destructive_ops
-                general_graph = graph_id.startswith(general_prefix) if general_prefix else False
+                general_graph = graph_id.startswith(GENERAL_PREFIX) if GENERAL_PREFIX else False
                 if is_destructive and not general_graph:
                     # This is a destructive operation - ask for user confirmation
                     confirmation_message = f"""⚠️ DESTRUCTIVE OPERATION DETECTED ⚠️
