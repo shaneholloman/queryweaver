@@ -8,10 +8,12 @@ import { getSelectedGraph } from './graph_select';
 
 export async function sendMessage() {
     const message = (DOM.messageInput?.value || '').trim();
+    
     if (!message) return;
 
-    const selectedValue = getSelectedGraph() || '';
-    if (!selectedValue || selectedValue === "Select Database") return
+    const selectedValue = getSelectedGraph();
+    
+    if (!selectedValue || selectedValue === "Select Database") return console.debug("No selected graph");
 
     if (state.currentRequestController) {
         state.currentRequestController.abort();
@@ -23,7 +25,7 @@ export async function sendMessage() {
     // Show typing indicator
     DOM.inputContainer?.classList.add('loading');
     if (DOM.submitButton) DOM.submitButton.style.display = 'none';
-    if (DOM.pauseButton) DOM.pauseButton.style.display = 'block';
+    if (DOM.pauseButton) DOM.pauseButton.style.display = 'flex';
     if (DOM.newChatButton) DOM.newChatButton.disabled = true;
     addMessage('', "loading");
 
@@ -189,7 +191,7 @@ function handleQueryResult(step: any) {
 
 function resetUIState() {
     DOM.inputContainer?.classList.remove('loading');
-    if (DOM.submitButton) DOM.submitButton.style.display = 'block';
+    if (DOM.submitButton) DOM.submitButton.style.display = 'flex';
     if (DOM.pauseButton) DOM.pauseButton.style.display = 'none';
     if (DOM.newChatButton) DOM.newChatButton.disabled = false;
     removeLoadingMessage();

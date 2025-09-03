@@ -2,6 +2,7 @@
 
 .input-button {
   background: var(--falkor-primary);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
@@ -13,6 +14,11 @@
   justify-content: center;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.input-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .input-button img {
@@ -44,6 +50,11 @@
   justify-content: center;
   padding: 0;
   position: relative;
+}
+
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .action-button:hover {

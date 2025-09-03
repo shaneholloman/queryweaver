@@ -65,6 +65,18 @@ function setupEventListeners() {
     if ((e as KeyboardEvent).key === "Enter") sendMessage();
   });
 
+  DOM.messageInput?.addEventListener("input", () => {
+    const submitButton = DOM.submitButton;
+    const messageInput = DOM.messageInput;
+    if (!submitButton || !messageInput) return;
+    const selected = getSelectedGraph();
+    if (messageInput.value && selected && selected !== "Select database") {
+      submitButton.disabled = false;
+    } else {
+      submitButton.disabled = true;
+    }
+  });
+
   DOM.menuButton?.addEventListener("click", () =>
     toggleContainer(DOM.menuContainer as HTMLElement)
   );
@@ -84,7 +96,7 @@ function setupEventListeners() {
 
     if (!refreshButton) return;
 
-    if (!selected || selected === "Select Database") return
+    if (!selected || selected === "Select Database") return console.debug("No selected graph");
 
     refreshButton.classList.add("loading");
 

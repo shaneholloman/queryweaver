@@ -230,6 +230,7 @@
 
 #pause-button {
   display: none;
+  color: var(--text-primary);
 }
 
 #reset-button {

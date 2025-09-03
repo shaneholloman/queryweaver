@@ -121,13 +121,6 @@ export function loadGraphs() {
         console.warn("Custom graph dropdown not available", e);
       }
 
-      // custom dropdown is populated above via addGraphOption
-
-      if (DOM.messageInput) DOM.messageInput.disabled = false;
-      if (DOM.submitButton) DOM.submitButton.disabled = false;
-      if (DOM.messageInput)
-        DOM.messageInput.placeholder = "Describe the SQL query you want...";
-
       // Attach delete button handler if present
       const deleteBtn = document.getElementById("delete-graph-btn");
       if (deleteBtn) {
