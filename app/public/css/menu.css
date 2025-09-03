@@ -3,6 +3,7 @@
 .sidebar-container {
   width: 0;
   min-width: 0;
+  max-width: 50dvw;
   overflow: hidden;
   padding: 20px 0;
   display: flex;
@@ -17,11 +18,68 @@
 }
 
 .sidebar-container.open {
-  width: 30dvw;
+  width: 50%;
   padding: 20px;
-  left: 48px;
   visibility: visible;
   pointer-events: auto;
+}
+
+.sidebar-container.resizing {
+  transition: none; /* Disable transitions while resizing */
+}
+
+/* Resize handle styles */
+.resize-handle {
+  width: 6px;
+  background: transparent;
+  cursor: col-resize;
+  position: relative;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  flex-shrink: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resize-handle::before {
+  content: '';
+  width: 3px;
+  height: 40px;
+  background: var(--falkor-border-primary);
+  border-radius: 2px;
+  transition: background-color 0.2s ease;
+  opacity: 0.6;
+}
+
+.resize-handle:hover::before,
+.resize-handle.resizing::before {
+  background: var(--falkor-primary);
+  opacity: 1;
+}
+
+.resize-handle:hover,
+.resize-handle.resizing {
+  opacity: 1;
+}
+
+/* Show resize handles only when sidebars are open */
+.sidebar-container.open + .resize-handle {
+  opacity: 0.7;
+}
+
+.sidebar-container.open + .resize-handle:hover,
+.sidebar-container.open + .resize-handle.resizing {
+  opacity: 1;
+}
+
+/* Hide resize handles when sidebars are closed */
+.sidebar-container:not(.open) + .resize-handle {
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
 }
 
 #menu-content {
@@ -164,7 +222,7 @@
 #schema-controls {
   position: absolute;
   padding: 10px;
-  bottom: 15px;
+  bottom: 0px;
   left: 0px;
   display: flex;
   flex-direction: row;

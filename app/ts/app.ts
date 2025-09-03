@@ -17,6 +17,7 @@ import {
   setupToolbar,
   handleWindowResize,
   setupCustomDropdown,
+  setupResizeHandles,
 } from "./modules/ui";
 import { setupAuthenticationModal, setupDatabaseModal } from "./modules/modals";
 import { resizeGraph, showGraph } from "./modules/schema";
@@ -226,6 +227,7 @@ function setupUIComponents() {
   initLeftToolbar();
   setupCustomDropdown();
   setupTextareaAutoResize();
+  setupResizeHandles();
 }
 
 function loadInitialData() {

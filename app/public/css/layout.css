@@ -1,11 +1,12 @@
 /* Main Layout Components */
 
 #container {
-  height: 98%;
-  width: 100%;
+  height: calc(100% - 40px);
+  width: calc(100% - 40px);
   display: flex;
   flex-direction: row;
   position: relative;
+  margin-left: 40px;
 }
 
 .logo {
