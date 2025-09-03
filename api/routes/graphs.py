@@ -105,7 +105,9 @@ def _graph_name(request: Request, graph_id:str) -> str:
 
     return f"{request.state.user_id}_{graph_id}"
 
-@graphs_router.get("", operation_id="list_databases")
+@graphs_router.get("", operation_id="list_databases", responses={
+    401: {"description": "Unauthorized - Please log in or provide a valid API token"}
+})
 @token_required
 async def list_graphs(request: Request):
     """
@@ -118,7 +120,9 @@ async def list_graphs(request: Request):
                        for graph in user_graphs if graph.startswith(f"{user_id}_")]
     return JSONResponse(content=filtered_graphs)
 
-@graphs_router.get("/{graph_id}/data", operation_id="database_schema")
+@graphs_router.get("/{graph_id}/data", operation_id="database_schema", responses={
+    401: {"description": "Unauthorized - Please log in or provide a valid API token"}
+})
 @token_required
 async def get_graph_data(request: Request, graph_id: str):  # pylint: disable=too-many-locals,too-many-branches
     """Return all nodes and edges for the specified database schema (namespaced to the user).
@@ -215,7 +219,9 @@ async def get_graph_data(request: Request, graph_id: str):  # pylint: disable=to
     return JSONResponse(content={"nodes": nodes, "links": links})
 
 
-@graphs_router.post("")
+@graphs_router.post("", responses={
+    401: {"description": "Unauthorized - Please log in or provide a valid API token"}
+})
 @token_required
 async def load_graph(request: Request, data: GraphData = None, file: UploadFile = File(None)): # pylint: disable=unused-argument
     """
@@ -249,7 +255,9 @@ async def load_graph(request: Request, data: GraphData = None, file: UploadFile 
     else:
         raise HTTPException(status_code=415, detail="Unsupported Content-Type")
 
-@graphs_router.post("/{graph_id}", operation_id="query_database")
+@graphs_router.post("/{graph_id}", operation_id="query_database", responses={
+    401: {"description": "Unauthorized - Please log in or provide a valid API token"}
+})
 @token_required
 async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest):  # pylint: disable=too-many-statements
     """
@@ -627,7 +635,9 @@ What this will do:
     return StreamingResponse(generate(), media_type="application/json")
 
 
-@graphs_router.post("/{graph_id}/confirm")
+@graphs_router.post("/{graph_id}/confirm", responses={
+    401: {"description": "Unauthorized - Please log in or provide a valid API token"}
+})
 @token_required
 async def confirm_destructive_operation(
     request: Request,
@@ -789,7 +799,9 @@ async def confirm_destructive_operation(
     return StreamingResponse(generate_confirmation(), media_type="application/json")
 
 
-@graphs_router.post("/{graph_id}/refresh")
+@graphs_router.post("/{graph_id}/refresh", responses={
+    401: {"description": "Unauthorized - Please log in or provide a valid API token"}
+})
 @token_required
 async def refresh_graph_schema(request: Request, graph_id: str):
     """
@@ -818,7 +830,9 @@ async def refresh_graph_schema(request: Request, graph_id: str):
         logging.error("Error in refresh_graph_schema: %s", str(e))
         raise HTTPException(status_code=500, detail="Internal server error while refreshing schema") # pylint: disable=raise-missing-from
 
-@graphs_router.delete("/{graph_id}")
+@graphs_router.delete("/{graph_id}", responses={
+    401: {"description": "Unauthorized - Please log in or provide a valid API token"}
+})
 @token_required
 async def delete_graph(request: Request, graph_id: str):
     """Delete the specified graph (namespaced to the user).

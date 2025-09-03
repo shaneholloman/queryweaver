@@ -26,7 +26,9 @@ class DatabaseConnectionRequest(BaseModel):
 
     url: str
 
-@database_router.post("/database", operation_id="connect_database")
+@database_router.post("/database", operation_id="connect_database", responses={
+    401: {"description": "Unauthorized - Please log in or provide a valid API token"}
+})
 @token_required
 async def connect_database(request: Request, db_request: DatabaseConnectionRequest):
     """
