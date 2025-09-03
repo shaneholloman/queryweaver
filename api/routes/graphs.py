@@ -341,7 +341,7 @@ async def query_graph(request: Request, graph_id: str, chat_data: ChatRequest): 
         # Wait for relevancy check first
         answer_rel = await relevancy_task
 
-        if answer_rel["status"] != "On-topic":
+        if answer_rel["status"] != "On-topic": # pylint: disable=too-many-nested-blocks
             # Cancel the find task since query is off-topic
             find_task.cancel()
             try:
