@@ -1,34 +1,24 @@
 matrix:
 - name: Markdown
-  expect_match: false
-  apsell:
-    lang: en
-    d: en_US
+  sources:
+    - '*.md'
+    - 'docs/*.md'
+  default_encoding: utf-8
   dictionary:
     wordlists:
-    - .github/wordlist.txt
-    output: wordlist.dic
+      - .github/wordlist.txt
+    encoding: utf-8
   pipeline:
-  - pyspelling.filters.markdown:
-      markdown_extensions:
-      - markdown.extensions.extra
-  - pyspelling.filters.html:
-      comments: false
-      attributes:
-      - alt
-      ignores:
-      - ':matches(code, pre)'
-      - code
-      - pre
-      - blockquote
-      - img
-      - table
-  sources:
-  - '*.md'
-  - 'docs/*.md'
-
-  # <-- add regex patterns here
-  default_encoding: utf-8
-  regex:
-    - pattern: '[A-Za-z0-9]{6,}'   # ignore random alphanumeric tokens
-      replace: ''                  # drop them from spellcheck
+    # Strip out Markdown noise
+    - pyspelling.filters.markdown
+    # Ignore URLs (https://, etc.)
+    - pyspelling.filters.url
+    # Ignore emails (foo@bar.com)
+    - pyspelling.filters.email
+    # Ignore HTML tags/attributes inside Markdown
+    - pyspelling.filters.html
+  aspell:
+    lang: en
+    d: en_US
+    ignore-case: true
+    run-together: true
