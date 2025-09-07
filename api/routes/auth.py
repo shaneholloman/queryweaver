@@ -163,6 +163,8 @@ async def _set_mail_hash(email: str, password_hash: str) -> bool:
         )
         
 def _is_request_secure(request: Request) -> bool:
+    """Determine if the request is secure (HTTPS)."""
+    
     # Check X-Forwarded-Proto first (proxy-aware)
     forwarded_proto = request.headers.get("x-forwarded-proto")
     if forwarded_proto:
@@ -224,9 +226,9 @@ async def email_signup(request: Request, signup_data: EmailSignupRequest) -> JSO
         # Validate required fields
         if not all([signup_data.firstName, signup_data.lastName,
                     signup_data.email, signup_data.password]):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="All fields are required"
+            return JSONResponse(
+                {"success": False, "error": "All fields are required"},
+                status_code=status.HTTP_400_BAD_REQUEST
             )
 
         first_name = signup_data.firstName.strip()
@@ -236,16 +238,16 @@ async def email_signup(request: Request, signup_data: EmailSignupRequest) -> JSO
 
         # Validate email format
         if not _validate_email(email):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid email format"
+            return JSONResponse(
+                {"success": False, "error": "Invalid email format"},
+                status_code=status.HTTP_400_BAD_REQUEST
             )
 
         # Validate password strength
         if len(password) < 8:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Password must be at least 8 characters long"
+            return JSONResponse(
+                {"success": False, "error": "Password must be at least 8 characters long"},
+                status_code=status.HTTP_400_BAD_REQUEST
             )
 
         api_token = secrets.token_urlsafe(32)
@@ -342,8 +344,8 @@ async def email_login(request: Request, login_data: EmailLoginRequest) -> JSONRe
             user_data = {
                 'id': identity_props.get("provider_user_id", email),
                 'email': user_props.get('email', email),
-                'name': user_props.get('name', ""),
-                'picture': user_props.get('picture', ""),
+                'name': user_props.get('name', ''),
+                'picture': user_props.get('picture', ''),
             }
 
             # Call the registered Google callback handler if it exists to store user data.
@@ -369,9 +371,9 @@ async def email_login(request: Request, login_data: EmailLoginRequest) -> JSONRe
         )
     except Exception as e:
         logging.error("Login error: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Login failed"
+        return JSONResponse(
+            {"success": False, "error": "Login failed"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 # ---- Helpers ----
