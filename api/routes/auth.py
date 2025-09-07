@@ -6,7 +6,6 @@ import hmac
 import logging
 import os
 import re
-import time
 import secrets
 
 from pathlib import Path
