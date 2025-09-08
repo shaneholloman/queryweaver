@@ -248,7 +248,7 @@ class MemoryTool:
         except Exception as e:
             return False
 
-    async def add_new_memory(self, conversation: Dict[str, Any], history: List[Dict[str, Any]]) -> bool:
+    async def add_new_memory(self, conversation: Dict[str, Any], history: Tuple[List[str], List[str]]) -> bool:
         # Use LLM to analyze and summarize the conversation with focus on graph-oriented database facts
         analysis = await self.summarize_conversation(conversation, history)
         user_id = self.user_id
@@ -579,8 +579,8 @@ class MemoryTool:
                 memory_context += f"(Personal preferences and information):\n{user_summary}\n\n"
             
             if database_facts:
-                memory_context += f"{self.} INTERACTION HISTORY (Previous queries and learnings about this database):\n{database_facts}\n\n"
-    
+                memory_context += f"{self.graph_id} INTERACTION HISTORY (Previous queries and learnings about this database):\n{database_facts}\n\n"
+
             # Add similar queries context
             if similar_queries:
                 memory_context += "SIMILAR QUERIES HISTORY:\n"
