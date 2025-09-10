@@ -120,6 +120,15 @@ function setupEventListeners() {
     if (!selected || selected === "Select Database")
       return console.debug("No selected graph");
 
+    // Check if selected database is a demo database
+    const generalPrefix = (window as any).generalPrefix;
+    const isDemo = generalPrefix && selected.startsWith(generalPrefix);
+    
+    if (isDemo) {
+      console.debug("Refresh is disabled for demo databases");
+      return;
+    }
+
     refreshButton.classList.add("loading");
 
     const result = await fetch(

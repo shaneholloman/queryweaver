@@ -81,6 +81,10 @@ export function loadGraphs() {
       try {
         clearGraphOptions();
         data.forEach((graph) => {
+          // Check if this graph is a demo database
+          const generalPrefix = (window as any).generalPrefix;
+          const isDemo = generalPrefix && graph.startsWith(generalPrefix);
+          
           addGraphOption(
             graph,
             (name) => {
@@ -114,7 +118,8 @@ export function loadGraphs() {
                 // Always refresh the graph list after delete attempt
                 loadGraphs();
               }
-            }
+            },
+            isDemo
           );
         });
 
