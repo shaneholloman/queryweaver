@@ -4,7 +4,18 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 
 from api.core.schema_loader import list_databases
-from api.core.text2sql import GENERAL_PREFIX, ChatRequest, ConfirmRequest, GraphNotFoundError, InternalError, InvalidArgumentError, delete_database, execute_destructive_operation, get_schema, query_database, refresh_database_schema
+from api.core.text2sql import (GENERAL_PREFIX,
+                               ChatRequest,
+                               ConfirmRequest,
+                               GraphNotFoundError,
+                               InternalError,
+                               InvalidArgumentError,
+                               delete_database,
+                               execute_destructive_operation,
+                               get_schema,
+                               query_database,
+                               refresh_database_schema
+                                )
 from api.auth.user_management import token_required
 from api.extensions import db
 
@@ -126,7 +137,6 @@ async def confirm_destructive_operation(
                                                                     graph_id, confirm_data)
         return StreamingResponse(generator, media_type="application/json")
     except InvalidArgumentError as iae:
-        # TODO is it the right place? using a generate() function
         return JSONResponse(content={"error": str(iae)}, status_code=400)
 
 @graphs_router.post("/{graph_id}/refresh", responses={

@@ -103,7 +103,7 @@ def _graph_name(user_id: str, graph_id:str) -> str:
 
     return f"{user_id}_{graph_id}"
 
-async def get_schema(user_id: str, graph_id: str):  # pylint: disable=too-many-locals,too-many-branches
+async def get_schema(user_id: str, graph_id: str):  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """Return all nodes and edges for the specified database schema (namespaced to the user).
 
     This endpoint returns a JSON object with two keys: `nodes` and `edges`.
