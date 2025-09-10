@@ -99,7 +99,7 @@ class MemoryTool:
                     'name': user_node_name,
                     'group_id': '\\_',
                     'created_at': datetime.now().isoformat(),
-                    'summary': f'The User is using QueryWeaver',
+                    'summary': 'The User is using QueryWeaver',
                     'name_embedding': user_name_embedding
                 }
                 
