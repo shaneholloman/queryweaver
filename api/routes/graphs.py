@@ -841,7 +841,7 @@ async def refresh_graph_schema(request: Request, graph_id: str):
     if they suspect the graph is out of sync with the database.
     """
     graph_id = _graph_name(request, graph_id)
-    
+
     # Prevent refresh of demo databases
     if GENERAL_PREFIX and graph_id.startswith(GENERAL_PREFIX):
         raise HTTPException(status_code=403, detail="Demo graphs cannot be refreshed")
