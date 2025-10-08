@@ -69,7 +69,7 @@ def create_app():
     mcp_app = None
     if disable_mcp:
         logging.info("MCP endpoints disabled via DISABLE_MCP environment variable")
-        routes=[       
+        routes=[
             *app.routes,  # Original API routes only
         ]
     else:
