@@ -769,8 +769,7 @@ async def refresh_database_schema(user_id: str, graph_id: str):
             raise InternalError("No database URL found for this graph")
 
         # Call load_database to refresh the schema by reconnecting
-        return await load_database(user_id, db_url)
-
+        return await load_database(db_url, user_id)
     except InternalError:
         raise
     except Exception as e:
