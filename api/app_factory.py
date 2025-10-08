@@ -83,7 +83,6 @@ def create_app():
     if disable_mcp:
         logging.info("MCP endpoints disabled via DISABLE_MCP environment variable")
     else:
-        # FastMCP.from_fastapi(app)  # pylint: disable=unused-variable
         mcp = FastMCP.from_fastapi(
             app=app,
             name="queryweaver",
