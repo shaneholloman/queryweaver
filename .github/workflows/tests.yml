@@ -47,6 +47,10 @@ jobs:
         npm --version || true
         (cd app && npm ci)
 
+    - name: Build frontend
+      run: |
+        cd app && npm run build
+
     - name: Create test environment file
       run: |
         cp .env.example .env
