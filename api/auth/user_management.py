@@ -314,7 +314,7 @@ def token_optional(func):
 
             return await func(request, *args, **kwargs)
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             logging.error("Unexpected error in token_optional: %s", e)
             # Don't raise 401 - allow the request to proceed
             request.state.user_id = None
