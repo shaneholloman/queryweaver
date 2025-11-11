@@ -9,10 +9,11 @@ class SQLIdentifierQuoter:
     Utility class for automatically quoting SQL identifiers (table/column names)
     that contain special characters like dashes.
     """
-    
+
     # Characters that require quoting in identifiers
-    SPECIAL_CHARS = {'-', ' ', '.', '@', '#', '$', '%', '^', '&', '*', '(', ')', '+', '=', '[', ']', '{', '}', '|', '\\', ':', ';', '"', "'", '<', '>', ',', '?', '/'}
-    
+    SPECIAL_CHARS = {'-', ' ', '.', '@', '#', '$', '%', '^', '&', '*', '(',
+                     ')', '+', '=', '[', ']', '{', '}', '|', '\\', ':',
+                     ';', '"', "'", '<', '>', ',', '?', '/'}
     # SQL keywords that should not be quoted
     SQL_KEYWORDS = {
         'SELECT', 'FROM', 'WHERE', 'JOIN', 'LEFT', 'RIGHT', 'INNER', 'OUTER', 'ON',
@@ -38,11 +39,11 @@ class SQLIdentifierQuoter:
         if (identifier.startswith('"') and identifier.endswith('"')) or \
            (identifier.startswith('`') and identifier.endswith('`')):
             return False
-            
+
         # Check if it's a SQL keyword
         if identifier.upper() in cls.SQL_KEYWORDS:
             return False
-            
+
         # Check for special characters
         return any(char in cls.SPECIAL_CHARS for char in identifier)
 
@@ -59,12 +60,12 @@ class SQLIdentifierQuoter:
             Quoted identifier
         """
         identifier = identifier.strip()
-        
+
         # Don't double-quote
         if (identifier.startswith('"') and identifier.endswith('"')) or \
            (identifier.startswith('`') and identifier.endswith('`')):
             return identifier
-            
+
         return f'{quote_char}{identifier}{quote_char}'
 
     @classmethod
@@ -80,7 +81,7 @@ class SQLIdentifierQuoter:
             Set of potential table names
         """
         table_names = set()
-        
+
         # Pattern to match table names after FROM, JOIN, UPDATE, INSERT INTO, etc.
         # This is a heuristic approach - not perfect but handles common cases
         patterns = [
@@ -90,7 +91,7 @@ class SQLIdentifierQuoter:
             r'\bINSERT\s+INTO\s+([a-zA-Z0-9_\-]+)',
             r'\bTABLE\s+([a-zA-Z0-9_\-]+)',
         ]
-        
+
         for pattern in patterns:
             matches = re.finditer(pattern, sql_query, re.IGNORECASE)
             for match in matches:
@@ -99,7 +100,7 @@ class SQLIdentifierQuoter:
                 if not ((table_name.startswith('"') and table_name.endswith('"')) or
                        (table_name.startswith('`') and table_name.endswith('`'))):
                     table_names.add(table_name)
-        
+
         return table_names
 
     @classmethod
@@ -122,37 +123,37 @@ class SQLIdentifierQuoter:
         """
         modified = False
         result_query = sql_query
-        
+
         # Extract potential table names from query
         query_tables = cls.extract_table_names_from_query(sql_query)
-        
+
         # For each table that needs quoting
         for table in query_tables:
             # Check if this table exists in known schema and needs quoting
             if table in known_tables and cls.needs_quoting(table):
                 # Quote the table name
                 quoted = cls.quote_identifier(table, quote_char)
-                
+
                 # Replace unquoted occurrences with quoted version
                 # Use word boundaries to avoid partial replacements
                 # Handle cases: FROM table, JOIN table, table.column, etc.
                 patterns_to_replace = [
-                    (rf'\b{re.escape(table)}\b(?!\s*\.)', quoted),  # table not followed by dot
-                    (rf'\b{re.escape(table)}\.', f'{quoted}.'),     # table followed by dot
+                    (rf'\b{re.escape(table)}\b(?!\s*\.)', quoted),
+                    (rf'\b{re.escape(table)}\.', f'{quoted}.'),
                 ]
-                
+
                 for pattern, replacement in patterns_to_replace:
                     new_query = re.sub(pattern, replacement, result_query, flags=re.IGNORECASE)
                     if new_query != result_query:
                         modified = True
                         result_query = new_query
-        
+
         return result_query, modified
 
 
 class DatabaseSpecificQuoter:
     """Factory class to get the appropriate quote character for different databases."""
-    
+
     @staticmethod
     def get_quote_char(db_type: str) -> str:
         """

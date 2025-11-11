@@ -1,6 +1,5 @@
 """Unit tests for SQL identifier quoting utilities."""
 
-import pytest
 from api.utils.sql_sanitizer import SQLIdentifierQuoter, DatabaseSpecificQuoter
 
 
@@ -59,11 +58,11 @@ class TestSQLIdentifierQuoter:
         """Test auto-quoting a simple SELECT query."""
         query = "SELECT * FROM table-name"
         known_tables = {"table-name"}
-        
+
         result, modified = SQLIdentifierQuoter.auto_quote_identifiers(
             query, known_tables, '"'
         )
-        
+
         assert modified is True
         assert '"table-name"' in result
         assert "table-name" not in result.replace('"table-name"', "")
@@ -72,11 +71,11 @@ class TestSQLIdentifierQuoter:
         """Test auto-quoting a query with JOINs."""
         query = "SELECT * FROM users JOIN order-items ON users.id = order-items.user_id"
         known_tables = {"users", "order-items"}
-        
+
         result, modified = SQLIdentifierQuoter.auto_quote_identifiers(
             query, known_tables, '"'
         )
-        
+
         assert modified is True
         assert '"order-items"' in result
         assert 'order-items.user_id' not in result  # Should be quoted
@@ -85,11 +84,11 @@ class TestSQLIdentifierQuoter:
         """Test that queries without special chars aren't modified."""
         query = "SELECT * FROM users WHERE id = 1"
         known_tables = {"users"}
-        
+
         result, modified = SQLIdentifierQuoter.auto_quote_identifiers(
             query, known_tables, '"'
         )
-        
+
         assert modified is False
         assert result == query
 
@@ -97,11 +96,11 @@ class TestSQLIdentifierQuoter:
         """Test that unknown tables aren't quoted."""
         query = "SELECT * FROM unknown-table"
         known_tables = {"users"}  # unknown-table is not in schema
-        
-        result, modified = SQLIdentifierQuoter.auto_quote_identifiers(
+
+        _result, modified = SQLIdentifierQuoter.auto_quote_identifiers(
             query, known_tables, '"'
         )
-        
+
         # Should not modify since table is not in known_tables
         assert modified is False
 
@@ -109,11 +108,11 @@ class TestSQLIdentifierQuoter:
         """Test auto-quoting with qualified column names (table.column)."""
         query = "SELECT table-name.id FROM table-name"
         known_tables = {"table-name"}
-        
+
         result, modified = SQLIdentifierQuoter.auto_quote_identifiers(
             query, known_tables, '"'
         )
-        
+
         assert modified is True
         assert '"table-name".id' in result or '"table-name"."id"' in result
 
@@ -121,11 +120,11 @@ class TestSQLIdentifierQuoter:
         """Test auto-quoting with MySQL backticks."""
         query = "SELECT * FROM order-items"
         known_tables = {"order-items"}
-        
+
         result, modified = SQLIdentifierQuoter.auto_quote_identifiers(
             query, known_tables, '`'
         )
-        
+
         assert modified is True
         assert '`order-items`' in result
 
@@ -133,11 +132,11 @@ class TestSQLIdentifierQuoter:
         """Test auto-quoting INSERT queries."""
         query = "INSERT INTO table-name (id, name) VALUES (1, 'test')"
         known_tables = {"table-name"}
-        
+
         result, modified = SQLIdentifierQuoter.auto_quote_identifiers(
             query, known_tables, '"'
         )
-        
+
         assert modified is True
         assert '"table-name"' in result
 
@@ -145,11 +144,11 @@ class TestSQLIdentifierQuoter:
         """Test auto-quoting UPDATE queries."""
         query = "UPDATE table-name SET status = 'active' WHERE id = 1"
         known_tables = {"table-name"}
-        
+
         result, modified = SQLIdentifierQuoter.auto_quote_identifiers(
             query, known_tables, '"'
         )
-        
+
         assert modified is True
         assert '"table-name"' in result
 
@@ -160,11 +159,11 @@ class TestSQLIdentifierQuoter:
         JOIN order-history ON user-accounts.id = order-history.user_id
         """
         known_tables = {"user-accounts", "order-history"}
-        
+
         result, modified = SQLIdentifierQuoter.auto_quote_identifiers(
             query, known_tables, '"'
         )
-        
+
         assert modified is True
         assert '"user-accounts"' in result
         assert '"order-history"' in result
@@ -208,11 +207,11 @@ class TestIntegrationScenarios:
         ORDER BY oh.order_date DESC
         """
         known_tables = {"user-accounts", "order-history"}
-        
+
         result, modified = SQLIdentifierQuoter.auto_quote_identifiers(
             query, known_tables, '"'
         )
-        
+
         assert modified is True
         assert '"user-accounts"' in result
         assert '"order-history"' in result
@@ -225,10 +224,10 @@ class TestIntegrationScenarios:
         # User's scenario: table with dash needs quotes
         query = "select * from table-name"
         known_tables = {"table-name"}
-        
+
         result, modified = SQLIdentifierQuoter.auto_quote_identifiers(
             query, known_tables, '"'
         )
-        
+
         assert modified is True
         assert 'select * from "table-name"' in result.lower()
