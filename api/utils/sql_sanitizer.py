@@ -151,7 +151,7 @@ class SQLIdentifierQuoter:
         return result_query, modified
 
 
-class DatabaseSpecificQuoter:
+class DatabaseSpecificQuoter:  # pylint: disable=too-few-public-methods
     """Factory class to get the appropriate quote character for different databases."""
 
     @staticmethod

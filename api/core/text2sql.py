@@ -618,7 +618,7 @@ What this will do:
     return generate()
 
 
-async def execute_destructive_operation(
+async def execute_destructive_operation(  # pylint: disable=too-many-statements
     user_id: str,
     graph_id: str,
     confirm_data: ConfirmRequest,
@@ -641,7 +641,7 @@ async def execute_destructive_operation(
         raise InvalidArgumentError("No SQL query provided")
 
     # Create a generator function for streaming the confirmation response
-    async def generate_confirmation():
+    async def generate_confirmation():  # pylint: disable=too-many-locals,too-many-statements
         # Create memory tool for saving query results
         memory_tool = await MemoryTool.create(user_id, graph_id)
 
