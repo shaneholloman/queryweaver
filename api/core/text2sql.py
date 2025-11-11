@@ -18,7 +18,7 @@ from api.graph import find, get_db_description
 from api.loaders.postgres_loader import PostgresLoader
 from api.loaders.mysql_loader import MySQLLoader
 from api.memory.graphiti_tool import MemoryTool
-from api.utils.sql_sanitizer import SQLIdentifierQuoter, DatabaseSpecificQuoter
+from api.utils import SQLIdentifierQuoter, DatabaseSpecificQuoter
 
 # Use the same delimiter as in the JavaScript
 MESSAGE_DELIMITER = "|||FALKORDB_MESSAGE_BOUNDARY|||"

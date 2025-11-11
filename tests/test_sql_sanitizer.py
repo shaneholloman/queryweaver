@@ -1,6 +1,6 @@
 """Unit tests for SQL identifier quoting utilities."""
 
-from api.utils.sql_sanitizer import SQLIdentifierQuoter, DatabaseSpecificQuoter
+from api.utils import SQLIdentifierQuoter, DatabaseSpecificQuoter
 
 
 class TestSQLIdentifierQuoter:
