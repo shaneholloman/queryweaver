@@ -221,7 +221,7 @@ export class DatabaseService {
     try {
       // Build connection URL from individual parameters
       const protocol = config.type === 'mysql' ? 'mysql' : 'postgresql';
-      const connectionUrl = `${protocol}://${config.username}:${config.password}@${config.host}:${config.port}/${config.database}`;
+      const connectionUrl = `${protocol}://${encodeURIComponent(config.username)}:${encodeURIComponent(config.password)}@${config.host}:${config.port}/${encodeURIComponent(config.database)}`;
       
       const response = await fetch(buildApiUrl('/database'), {
         method: 'POST',

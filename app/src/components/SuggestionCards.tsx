@@ -1,15 +1,11 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { useIsMobile } from "@/hooks/use-mobile";
-
 interface SuggestionCardsProps {
   suggestions: string[];
   onSelect: (suggestion: string) => void;
 }
 
 const SuggestionCards = ({ suggestions, onSelect }: SuggestionCardsProps) => {
-  const isMobile = useIsMobile();
-  
   return (
     <div className="grid gap-3 mb-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
       {suggestions.map((suggestion, index) => (

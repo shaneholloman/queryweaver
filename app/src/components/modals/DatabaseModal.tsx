@@ -36,19 +36,28 @@ const DatabaseModal = ({ open, onOpenChange }: DatabaseModalProps) => {
 
   const addStep = (message: string, status: 'pending' | 'success' | 'error' = 'pending') => {
     setConnectionSteps(prev => {
-      const updated = prev.map((step, index) => {
-        if (index !== prev.length - 1 || step.status !== 'pending') {
-          return step;
+      // If adding a new pending step, mark the previous pending step as success
+      if (status === 'pending' && prev.length > 0) {
+        const lastStep = prev[prev.length - 1];
+        if (lastStep.status === 'pending') {
+          const updated = [...prev];
+          updated[updated.length - 1] = { ...lastStep, status: 'success' };
+          return [...updated, { message, status }];
         }
-        if (status === 'error') {
-          return { ...step, status: 'error' as const };
+      }
+
+      // If updating status (success/error), update the last pending step instead of adding new
+      if (status !== 'pending' && prev.length > 0) {
+        const lastStep = prev[prev.length - 1];
+        if (lastStep.status === 'pending') {
+          const updated = [...prev];
+          updated[updated.length - 1] = { ...lastStep, status };
+          return updated;
         }
-        if (status !== 'pending') {
-          return { ...step, status: 'success' as const };
-        }
-        return step;
-      });
-      return [...updated, { message, status }];
+      }
+
+      // Default: just add the new step
+      return [...prev, { message, status }];
     });
   };
 
@@ -82,7 +91,10 @@ const DatabaseModal = ({ open, onOpenChange }: DatabaseModalProps) => {
       let dbUrl = connectionUrl;
       if (connectionMode === 'manual') {
         const protocol = selectedDatabase === 'mysql' ? 'mysql' : 'postgresql';
-        dbUrl = `${protocol}://${username}:${password}@${host}:${port}/${database}`;
+        const builtUrl = new URL(`${protocol}://${host}:${port}/${database}`);
+        builtUrl.username = username;
+        builtUrl.password = password;
+        dbUrl = builtUrl.toString();
       }
 
       // Make streaming request

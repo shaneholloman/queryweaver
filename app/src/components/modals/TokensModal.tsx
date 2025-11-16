@@ -94,12 +94,20 @@ const TokensModal: React.FC<TokensModalProps> = ({ open, onOpenChange }) => {
     }
   };
 
-  const handleCopyToken = () => {
-    if (newToken) {
-      navigator.clipboard.writeText(newToken);
+  const handleCopyToken = async () => {
+    if (!newToken) return;
+    try {
+      await navigator.clipboard.writeText(newToken);
       toast({
         title: 'Copied!',
         description: 'Token copied to clipboard',
+      });
+    } catch (error) {
+      console.error('Error copying token:', error);
+      toast({
+        title: 'Copy failed',
+        description: 'We could not copy the token. Please copy it manually.',
+        variant: 'destructive',
       });
     }
   };

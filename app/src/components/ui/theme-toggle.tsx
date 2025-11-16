@@ -11,16 +11,22 @@ type Theme = "light" | "dark";
 
 const ThemeToggle = () => {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Get theme from localStorage or default to dark
-    const savedTheme = localStorage.getItem("theme") as Theme;
-    return savedTheme || "dark";
+    try {
+      const savedTheme = localStorage.getItem("theme") as Theme;
+      return savedTheme || "dark";
+    } catch {
+      return "dark";
+    }
   });
 
   useEffect(() => {
-    // Apply theme to document
     const root = document.documentElement;
     root.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
+    try {
+      localStorage.setItem("theme", theme);
+    } catch (error) {
+      console.warn("Failed to persist theme preference:", error);
+    }
   }, [theme]);
 
   const toggleTheme = () => {

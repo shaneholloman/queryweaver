@@ -33,7 +33,9 @@ const Index = () => {
   const [showSchemaViewer, setShowSchemaViewer] = useState(false);
   const [showTokensModal, setShowTokensModal] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [schemaViewerWidth, setSchemaViewerWidth] = useState(Math.floor(window.innerWidth * 0.4));
+  const [schemaViewerWidth, setSchemaViewerWidth] = useState(() =>
+    typeof window !== "undefined" ? Math.floor(window.innerWidth * 0.4) : 0,
+  );
   const [githubStars, setGithubStars] = useState<string>('-');
   const [databaseToDelete, setDatabaseToDelete] = useState<{ id: string; name: string; isDemo: boolean } | null>(null);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);

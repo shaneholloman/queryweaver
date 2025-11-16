@@ -24,11 +24,14 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setIsLoading(true);
       const fetchedGraphs = await DatabaseService.getGraphs();
       setGraphs(fetchedGraphs);
-      
-      // Auto-select first graph if none selected
-      if (fetchedGraphs.length > 0 && !selectedGraph) {
-        setSelectedGraph(fetchedGraphs[0]);
-      }
+
+      // Auto-select first graph if none selected (using functional update to avoid stale closure)
+      setSelectedGraph(current => {
+        if (!current && fetchedGraphs.length > 0) {
+          return fetchedGraphs[0];
+        }
+        return current;
+      });
     } catch (error) {
       console.log('Backend not available - running in demo mode without saved databases');
       // Silently fail - this is expected when backend isn't running
@@ -40,7 +43,8 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     fetchGraphs();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount - fetchGraphs is stable
 
   const selectGraph = (graphId: string) => {
     const graph = graphs.find(g => g.id === graphId);
