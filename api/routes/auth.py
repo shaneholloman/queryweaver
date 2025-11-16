@@ -519,7 +519,7 @@ async def google_authorized(request: Request) -> RedirectResponse:
 
     except Exception as e:
         logging.error("Google OAuth authentication failed: %s", str(e))  # nosemgrep
-        raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}") from e
+        raise HTTPException(status_code=400, detail="Authentication failed") from e
 
 
 @auth_router.get("/login/google/callback", response_class=RedirectResponse)
@@ -623,7 +623,7 @@ async def github_authorized(request: Request) -> RedirectResponse:
 
     except Exception as e:
         logging.error("GitHub OAuth authentication failed: %s", str(e))  # nosemgrep
-        raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}") from e
+        raise HTTPException(status_code=400, detail="Authentication failed") from e
 
 
 @auth_router.get("/login/github/callback", response_class=RedirectResponse)

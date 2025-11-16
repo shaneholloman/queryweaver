@@ -72,7 +72,8 @@ async def get_graph_data(
         schema = await get_schema(request.state.user_id, graph_id)
         return JSONResponse(content=schema)
     except GraphNotFoundError as gnfe:
-        return JSONResponse(content={"error": str(gnfe)}, status_code=404)
+        logging.warning("Graph not found: %s", str(gnfe))
+        return JSONResponse(content={"error": "Database not found"}, status_code=404)
     except InternalError as ie:
         logging.error("Internal error getting schema: %s", str(ie))
         return JSONResponse(
@@ -146,7 +147,8 @@ async def query_graph(
         generator = await query_database(request.state.user_id, graph_id, chat_data)
         return StreamingResponse(generator, media_type="application/json")
     except InvalidArgumentError as iae:
-        return JSONResponse(content={"error": str(iae)}, status_code=400)
+        logging.warning("Invalid argument in query: %s", str(iae))
+        return JSONResponse(content={"error": "Invalid query request"}, status_code=400)
 
 
 @graphs_router.post("/{graph_id}/confirm", responses={401: UNAUTHORIZED_RESPONSE})
@@ -167,7 +169,8 @@ async def confirm_destructive_operation(
         )
         return StreamingResponse(generator, media_type="application/json")
     except InvalidArgumentError as iae:
-        return JSONResponse(content={"error": str(iae)}, status_code=400)
+        logging.warning("Invalid argument in destructive operation: %s", str(iae))
+        return JSONResponse(content={"error": "Invalid confirmation request"}, status_code=400)
 
 
 @graphs_router.post("/{graph_id}/refresh", responses={401: UNAUTHORIZED_RESPONSE})
@@ -211,9 +214,11 @@ async def delete_graph(request: Request, graph_id: str):
         return JSONResponse(content=result)
 
     except InvalidArgumentError as iae:
-        return JSONResponse(content={"error": str(iae)}, status_code=400)
+        logging.warning("Invalid argument in delete: %s", str(iae))
+        return JSONResponse(content={"error": "Invalid delete request"}, status_code=400)
     except GraphNotFoundError as gnfe:
-        return JSONResponse(content={"error": str(gnfe)}, status_code=404)
+        logging.warning("Graph not found for deletion: %s", str(gnfe))
+        return JSONResponse(content={"error": "Database not found"}, status_code=404)
     except InternalError as ie:
         logging.error("Internal error deleting database: %s", str(ie))
         return JSONResponse(
