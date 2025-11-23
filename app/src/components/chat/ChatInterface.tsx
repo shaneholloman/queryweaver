@@ -308,11 +308,13 @@ const ChatInterface = ({ className }: ChatInterfaceProps) => {
       {/* Bottom Section with Suggestions and Input */}
       <div className="border-t border-gray-700 bg-gray-900">
         <div className="p-6">
-          {/* Suggestion Cards */}
-          <SuggestionCards 
-            suggestions={suggestions}
-            onSelect={handleSuggestionSelect}
-          />
+          {/* Suggestion Cards - Only show for DEMO_CRM database */}
+          {(selectedGraph?.id === 'DEMO_CRM' || selectedGraph?.name === 'DEMO_CRM') && (
+            <SuggestionCards
+              suggestions={suggestions}
+              onSelect={handleSuggestionSelect}
+            />
+          )}
           
           {/* Query Input */}
           <QueryInput 

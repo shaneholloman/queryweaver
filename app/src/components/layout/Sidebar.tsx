@@ -5,7 +5,6 @@ import {
   BrainCircuit,
   BookOpen,
   LifeBuoy,
-  Settings,
   Waypoints,
 } from 'lucide-react';
 import {
@@ -116,7 +115,7 @@ const Sidebar = ({ className, onSchemaClick, isSchemaOpen, isCollapsed = false, 
       <nav className="flex flex-col items-center gap-4 px-2 py-4">
         <SidebarIcon icon={BookOpen} label="Documentation" href="https://docs.falkordb.com/" />
         <SidebarIcon icon={LifeBuoy} label="Support" href="https://discord.com/invite/jyUgBweNQz" />
-        <SidebarIcon icon={Settings} label="Settings" />
+        {/* <SidebarIcon icon={Settings} label="Settings" /> */}
       </nav>
     </aside>
     </>

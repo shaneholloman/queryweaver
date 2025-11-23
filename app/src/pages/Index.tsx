@@ -32,7 +32,9 @@ const Index = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSchemaViewer, setShowSchemaViewer] = useState(false);
   const [showTokensModal, setShowTokensModal] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
   const [schemaViewerWidth, setSchemaViewerWidth] = useState(() =>
     typeof window !== "undefined" ? Math.floor(window.innerWidth * 0.4) : 0,
   );
@@ -50,6 +52,15 @@ const Index = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Auto-collapse sidebar when switching to mobile view
+  useEffect(() => {
+    const isMobile = windowWidth < 768;
+    if (isMobile) {
+      setSidebarCollapsed(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [windowWidth]); // Only run when windowWidth changes, not on manual toggle
 
   // Calculate sidebar width based on collapsed state
   // On desktop: sidebar is always visible (64px), on mobile: can be collapsed (0px)
@@ -226,20 +237,20 @@ const Index = () => {
 
       while (true) {
         const { done, value } = await reader.read();
-        
+
         if (done) break;
-        
+
         const chunk = decoder.decode(value, { stream: true });
         buffer += chunk;
-        
+
         // Process complete messages
         const parts = buffer.split(delimiter);
         buffer = parts.pop() || ''; // Keep incomplete part in buffer
-        
+
         for (const part of parts) {
           const trimmed = part.trim();
           if (!trimmed) continue;
-          
+
           try {
             const message = JSON.parse(trimmed);
             if (message.type === 'error') {
@@ -255,16 +266,16 @@ const Index = () => {
           }
         }
       }
-      
+
       if (hasError) {
         return; // Error already thrown and caught
       }
-      
+
       toast({
         title: "Schema Refreshed",
         description: "Database schema refreshed successfully!",
       });
-      
+
       // Reload to show updated schema
       window.location.reload();
     } catch (error) {

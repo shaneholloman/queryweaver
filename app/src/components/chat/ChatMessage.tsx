@@ -180,7 +180,7 @@ const ChatMessage = ({ type, content, steps, queryData, analysisInfo, progress, 
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <div className="text-gray-200 text-sm leading-relaxed">
+            <div className="text-gray-200 text-sm leading-relaxed whitespace-pre-line">
               {content}
             </div>
           </div>
