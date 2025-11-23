@@ -1,4 +1,5 @@
 import React from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Link } from 'react-router-dom';
 import {
   PanelLeft,
@@ -80,7 +81,9 @@ const SidebarIcon = ({ icon: Icon, label, active, onClick, href }: {
   </TooltipProvider>
 );
 
+
 const Sidebar = ({ className, onSchemaClick, isSchemaOpen, isCollapsed = false, onToggleCollapse }: SidebarProps) => {
+  const isMobile = useIsMobile();
   return (
     <>
       <aside className={cn(
@@ -90,23 +93,25 @@ const Sidebar = ({ className, onSchemaClick, isSchemaOpen, isCollapsed = false, 
         className
       )}>
         <nav className="flex flex-col items-center gap-4 px-2 py-4">
-          <button
-            onClick={onToggleCollapse}
-            className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-gray-800 text-lg font-semibold text-white hover:bg-gray-700 md:cursor-default md:pointer-events-none md:opacity-100"
-            title="Toggle Sidebar (Mobile)"
-          >
-            <PanelLeft className="h-5 w-5 transition-all group-hover:scale-110" />
-            <span className="sr-only">Toggle Sidebar</span>
-          </button>
-        <ThemeToggle />
-        {/* <SidebarIcon icon={BrainCircuit} label="Query" active /> */}
-        <SidebarIcon 
-          icon={Waypoints} 
-          label="Schema" 
-          active={isSchemaOpen}
-          onClick={onSchemaClick}
-        />
-      </nav>
+          {isMobile && (
+            <button
+              onClick={onToggleCollapse}
+              className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-gray-800 text-lg font-semibold text-white hover:bg-gray-700"
+              title="Toggle Sidebar (Mobile)"
+            >
+              <PanelLeft className="h-5 w-5 transition-all group-hover:scale-110" />
+              <span className="sr-only">Toggle Sidebar</span>
+            </button>
+          )}
+          <ThemeToggle />
+          {/* <SidebarIcon icon={BrainCircuit} label="Query" active /> */}
+          <SidebarIcon 
+            icon={Waypoints} 
+            label="Schema" 
+            active={isSchemaOpen}
+            onClick={onSchemaClick}
+          />
+        </nav>
       
       <div className="flex-1 flex items-center justify-center">
         <Separator orientation="horizontal" className="bg-gray-700 w-8" />
