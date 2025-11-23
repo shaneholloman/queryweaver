@@ -30,7 +30,7 @@ interface ChatMessageData {
   timestamp: Date;
 }
 
-interface ChatInterfaceProps {
+export interface ChatInterfaceProps {
   className?: string;
   disabled?: boolean; // when true, block interactions
 }
@@ -50,9 +50,9 @@ const ChatInterface = ({ className, disabled = false }: ChatInterfaceProps) => {
 
   // Loading message component using skeleton
   const LoadingMessage = () => (
-    <div className="px-6">
+    <div className="loading-message-container px-6">
       <div className="flex gap-3 mb-6 items-start">
-        <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+        <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
           <span className="text-white text-xs font-bold">QW</span>
         </div>
         <div className="flex-1 min-w-0 space-y-2">

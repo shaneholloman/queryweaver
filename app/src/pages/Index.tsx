@@ -579,9 +579,8 @@ const Index = () => {
         </div>
         
         {/* Chat Interface - Full remaining height */}
-        <div className="flex-1 overflow-hidden">
-          {/* Add horizontal padding around the chat area without changing layout offsets */}
-          <div className="h-full w-full px-4 md:px-6">
+        <div className="flex-1 overflow-hidden flex justify-center">
+          <div className="h-full w-full max-w-7xl md:px-[15px]">
             <ChatInterface disabled={isRefreshingSchema} />
           </div>
         </div>
