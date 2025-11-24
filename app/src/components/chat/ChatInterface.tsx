@@ -80,6 +80,21 @@ const ChatInterface = ({ className, disabled = false }: ChatInterfaceProps) => {
     "What are the pending orders?"
   ];
 
+  // Reset conversation when the selected graph changes to avoid leaking
+  // conversation history between different databases.
+  useEffect(() => {
+    // Clear in-memory conversation history and reset messages to the greeting
+    conversationHistory.current = [];
+    setMessages([
+      {
+        id: "1",
+        type: "ai",
+        content: "Hello! Describe what you'd like to ask your database",
+        timestamp: new Date(),
+      }
+    ]);
+  }, [selectedGraph?.id]);
+
   // Scroll to bottom whenever messages change
   useEffect(() => {
     scrollToBottom();
@@ -189,8 +204,8 @@ const ChatInterface = ({ className, disabled = false }: ChatInterfaceProps) => {
             variant: "destructive",
           });
           finalContent = `Error: ${message.content}`;
-        } else if (message.type === 'confirmation') {
-          // Handle confirmation request
+        } else if (message.type === 'confirmation' || message.type === 'destructive_confirmation') {
+          // Handle confirmation request (also accept destructive_confirmation emitted by backend)
           finalContent = `This operation requires confirmation:\n\n${message.content}`;
         } else {
           console.warn('Unknown message type received:', message.type, message);

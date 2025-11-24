@@ -102,7 +102,7 @@ const Index = () => {
     fetch('https://api.github.com/repos/FalkorDB/QueryWeaver')
       .then(response => response.json())
       .then(data => {
-        if (data.stargazers_count) {
+        if (typeof data.stargazers_count === 'number') {
           setGithubStars(data.stargazers_count.toLocaleString());
         }
       })
@@ -113,8 +113,14 @@ const Index = () => {
 
   // Show login modal when not authenticated after loading completes
   useEffect(() => {
+    // Only auto-open the login modal once per user/session to avoid locking
+    // the SPA when the backend is down or in demo mode. Allow users to
+    // dismiss it and remember that choice in sessionStorage.
     if (!authLoading && !isAuthenticated) {
-      setShowLoginModal(true);
+      const dismissed = sessionStorage.getItem('loginModalDismissed');
+      if (!dismissed) {
+        setShowLoginModal(true);
+      }
     }
   }, [authLoading, isAuthenticated]);
 
@@ -589,8 +595,14 @@ const Index = () => {
       {/* Modals */}
       <LoginModal 
         open={showLoginModal} 
-        onOpenChange={setShowLoginModal}
-        canClose={false}  // User must sign in - cannot close the modal
+        onOpenChange={(open) => {
+          setShowLoginModal(open);
+          if (!open) {
+            // Remember dismissal for this session to avoid pinning the modal
+            sessionStorage.setItem('loginModalDismissed', '1');
+          }
+        }}
+        canClose={true}
       />
       <DatabaseModal open={showDatabaseModal} onOpenChange={setShowDatabaseModal} />
       <DeleteDatabaseModal 
