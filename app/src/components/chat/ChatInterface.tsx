@@ -290,9 +290,9 @@ const ChatInterface = ({ className, disabled = false, onProcessingChange }: Chat
   };
 
   return (
-    <div className={cn("flex flex-col h-full bg-gray-900", className)}>
+    <div className={cn("flex flex-col h-full bg-gray-900", className)} data-testid="chat-interface">
       {/* Messages Area */}
-      <div ref={chatContainerRef} className="flex-1 overflow-y-auto scrollbar-hide overflow-x-hidden">
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto scrollbar-hide overflow-x-hidden" data-testid="chat-messages-container">
         <div className="space-y-6 py-6 max-w-full">
           {messages.map((msg) => (
             <ChatMessage

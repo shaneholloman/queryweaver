@@ -17,10 +17,12 @@ export interface AuthStatusResponse {
 
 export interface LoginResponse {
   success: boolean;
+  error?: string;
 }
 
 export interface SignupResponse {
   success: boolean;
+  error?: string;
 }
 
 export interface LogoutResponse {

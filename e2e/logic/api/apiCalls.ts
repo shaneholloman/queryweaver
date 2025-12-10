@@ -2,6 +2,7 @@
 
 import { APIRequestContext, APIResponse } from "@playwright/test";
 import { getRequest, postRequest, deleteRequest } from "../../infra/api/apiRequests";
+import { getBaseUrl } from "../../config/urls";
 import type {
   AuthStatusResponse,
   LoginResponse,
@@ -24,10 +25,10 @@ import type {
  * GET /auth-status
  */
 export async function getAuthStatus(
-  baseUrl: string,
   requestContext?: APIRequestContext
 ): Promise<AuthStatusResponse> {
   try {
+    const baseUrl = getBaseUrl();
     const response = await getRequest(
       `${baseUrl}/auth-status`,
       undefined,
@@ -47,18 +48,20 @@ export async function getAuthStatus(
  * POST /login/email
  */
 export async function loginWithEmail(
-  baseUrl: string,
   email: string,
   password: string,
   requestContext?: APIRequestContext
 ): Promise<LoginResponse> {
   try {
+    const baseUrl = getBaseUrl();
     const response = await postRequest(
       `${baseUrl}/login/email`,
       { email, password },
       requestContext
     );
-    return await response.json();
+
+    const data = await response.json();
+    return data;
   } catch (error) {
     throw new Error(
       `Failed to login with email. \n Error: ${(error as Error).message}`
@@ -71,7 +74,6 @@ export async function loginWithEmail(
  * POST /signup/email
  */
 export async function signupWithEmail(
-  baseUrl: string,
   firstName: string,
   lastName: string,
   email: string,
@@ -79,6 +81,7 @@ export async function signupWithEmail(
   requestContext?: APIRequestContext
 ): Promise<SignupResponse> {
   try {
+    const baseUrl = getBaseUrl();
     const response = await postRequest(
       `${baseUrl}/signup/email`,
       { firstName, lastName, email, password },
@@ -97,10 +100,10 @@ export async function signupWithEmail(
  * POST /logout
  */
 export async function logout(
-  baseUrl: string,
   requestContext?: APIRequestContext
 ): Promise<LogoutResponse> {
   try {
+    const baseUrl = getBaseUrl();
     const response = await postRequest(
       `${baseUrl}/logout`,
       undefined,
@@ -118,7 +121,8 @@ export async function logout(
  * Get Google OAuth login URL
  * GET /login/google
  */
-export function getGoogleLoginUrl(baseUrl: string): string {
+export function getGoogleLoginUrl(): string {
+  const baseUrl = getBaseUrl();
   return `${baseUrl}/login/google`;
 }
 
@@ -126,7 +130,8 @@ export function getGoogleLoginUrl(baseUrl: string): string {
  * Get GitHub OAuth login URL
  * GET /login/github
  */
-export function getGithubLoginUrl(baseUrl: string): string {
+export function getGithubLoginUrl(): string {
+  const baseUrl = getBaseUrl();
   return `${baseUrl}/login/github`;
 }
 
@@ -137,10 +142,10 @@ export function getGithubLoginUrl(baseUrl: string): string {
  * GET /graphs
  */
 export async function getGraphs(
-  baseUrl: string,
   requestContext?: APIRequestContext
 ): Promise<GraphsListResponse> {
   try {
+    const baseUrl = getBaseUrl();
     const response = await getRequest(
       `${baseUrl}/graphs`,
       undefined,
@@ -160,11 +165,11 @@ export async function getGraphs(
  * GET /graphs/{graph_id}/data
  */
 export async function getGraphData(
-  baseUrl: string,
   graphId: string,
   requestContext?: APIRequestContext
 ): Promise<GraphDataResponse> {
   try {
+    const baseUrl = getBaseUrl();
     const response = await getRequest(
       `${baseUrl}/graphs/${graphId}/data`,
       undefined,
@@ -184,13 +189,13 @@ export async function getGraphData(
  * POST /graphs
  */
 export async function uploadGraph(
-  baseUrl: string,
   filePath: string,
   database?: string,
   description?: string,
   requestContext?: APIRequestContext
 ): Promise<GraphUploadResponse> {
   try {
+    const baseUrl = getBaseUrl();
     const formData: Record<string, string> = {
       file: filePath,
     };
@@ -218,7 +223,6 @@ export async function uploadGraph(
  * Returns streaming SSE response
  */
 export async function queryGraph(
-  baseUrl: string,
   graphId: string,
   chat: string[],
   result?: string[] | null,
@@ -226,6 +230,7 @@ export async function queryGraph(
   requestContext?: APIRequestContext
 ): Promise<APIResponse> {
   try {
+    const baseUrl = getBaseUrl();
     const body = {
       chat,
       result: result || null,
@@ -273,7 +278,6 @@ export async function parseStreamingResponse(
  * POST /graphs/{graph_id}/confirm
  */
 export async function confirmGraphOperation(
-  baseUrl: string,
   graphId: string,
   sqlQuery: string,
   confirmation: string,
@@ -281,6 +285,7 @@ export async function confirmGraphOperation(
   requestContext?: APIRequestContext
 ): Promise<APIResponse> {
   try {
+    const baseUrl = getBaseUrl();
     const body = {
       sql_query: sqlQuery,
       confirmation,
@@ -307,11 +312,11 @@ export async function confirmGraphOperation(
  * POST /graphs/{graph_id}/refresh
  */
 export async function refreshGraphSchema(
-  baseUrl: string,
   graphId: string,
   requestContext?: APIRequestContext
 ): Promise<APIResponse> {
   try {
+    const baseUrl = getBaseUrl();
     const response = await postRequest(
       `${baseUrl}/graphs/${graphId}/refresh`,
       undefined,
@@ -332,10 +337,10 @@ export async function refreshGraphSchema(
  * DELETE /graphs/{graph_id}
  */
 export async function deleteGraph(
-  baseUrl: string,
   graphId: string
 ): Promise<DeleteGraphResponse> {
   try {
+    const baseUrl = getBaseUrl();
     const response = await deleteRequest(
       `${baseUrl}/graphs/${graphId}`,
       undefined,
@@ -357,11 +362,11 @@ export async function deleteGraph(
  * Supports PostgreSQL and MySQL
  */
 export async function connectDatabase(
-  baseUrl: string,
   connectionUrl: string,
   requestContext?: APIRequestContext
 ): Promise<APIResponse> {
   try {
+    const baseUrl = getBaseUrl();
     const body = {
       url: connectionUrl,
     };
@@ -388,10 +393,10 @@ export async function connectDatabase(
  * POST /tokens/generate
  */
 export async function generateToken(
-  baseUrl: string,
   requestContext?: APIRequestContext
 ): Promise<GenerateTokenResponse> {
   try {
+    const baseUrl = getBaseUrl();
     const response = await postRequest(
       `${baseUrl}/tokens/generate`,
       undefined,
@@ -410,10 +415,10 @@ export async function generateToken(
  * GET /tokens/list
  */
 export async function listTokens(
-  baseUrl: string,
   requestContext?: APIRequestContext
 ): Promise<TokenListResponse> {
   try {
+    const baseUrl = getBaseUrl();
     const response = await getRequest(
       `${baseUrl}/tokens/list`,
       undefined,
@@ -433,10 +438,10 @@ export async function listTokens(
  * DELETE /tokens/{token_id}
  */
 export async function deleteToken(
-  baseUrl: string,
   tokenId: string
 ): Promise<DeleteTokenResponse> {
   try {
+    const baseUrl = getBaseUrl();
     const response = await deleteRequest(
       `${baseUrl}/tokens/${tokenId}`,
       undefined,
