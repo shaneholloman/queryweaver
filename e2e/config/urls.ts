@@ -20,6 +20,24 @@ export const config = {
     email: process.env.TEST_USER_EMAIL || 'test@example.com',
     password: process.env.TEST_USER_PASSWORD || 'testpassword123',
   },
+
+  /**
+   * Second test user credentials for multi-user tests
+   * Override with TEST_USER2_EMAIL and TEST_USER2_PASSWORD environment variables
+   */
+  testUser2: {
+    email: process.env.TEST_USER2_EMAIL || 'test2@example.com',
+    password: process.env.TEST_USER2_PASSWORD || 'testpassword456',
+  },
+
+  /**
+   * Test database connection URLs
+   * Override with environment variables for local/CI testing
+   */
+  testDatabases: {
+    postgres: process.env.TEST_POSTGRES_URL || 'postgresql://postgres:postgres@localhost:5432/testdb',
+    mysql: process.env.TEST_MYSQL_URL || 'mysql://root:password@localhost:3306/testdb',
+  },
 } as const;
 
 /**
@@ -34,4 +52,18 @@ export function getBaseUrl(): string {
  */
 export function getTestUser() {
   return config.testUser;
+}
+
+/**
+ * Get second test user credentials
+ */
+export function getTestUser2() {
+  return config.testUser2;
+}
+
+/**
+ * Get test database connection URLs
+ */
+export function getTestDatabases() {
+  return config.testDatabases;
 }

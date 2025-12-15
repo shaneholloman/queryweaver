@@ -1,15 +1,20 @@
 import { test as setup } from '@playwright/test';
-import { loginWithEmail, signupWithEmail } from '../logic/api/apiCalls';
-import { getTestUser } from '../config/urls';
+import apiCalls from '../logic/api/apiCalls';
+import signupWithEmail from '../logic/api/apiCalls';
+import { getTestUser, getTestUser2 } from '../config/urls';
 
 const authFile = 'e2e/.auth/user.json';
+const authFile2 = 'e2e/.auth/user2.json';
 
-setup('authenticate', async ({ page }) => {
+setup('authenticate users', async ({ page }) => {
+  const api = new apiCalls();
+  
+  // Authenticate user 1
   const { email, password } = getTestUser();
 
   try {
     // Try to login first
-    let response = await loginWithEmail(
+    let response = await api.loginWithEmail(
       email,
       password,
       page.request
@@ -17,7 +22,7 @@ setup('authenticate', async ({ page }) => {
 
     // If login fails, try to create the user
     if (!response.success) { 
-      const signupResponse = await signupWithEmail(
+      const signupResponse = await api.signupWithEmail(
         'Test',
         'User',
         email,
@@ -26,16 +31,51 @@ setup('authenticate', async ({ page }) => {
       );
 
       if (!signupResponse.success) {
-        throw new Error(`Failed to create test user: ${signupResponse.error || 'Unknown error'}`);
+        throw new Error(`Failed to create test user 1: ${signupResponse.error || 'Unknown error'}`);
       }
     } 
   } catch (error) {
     const errorMessage = (error as Error).message;
     throw new Error(
-      `Authentication failed. \n Error: ${errorMessage}`
+      `Authentication failed for user 1. \n Error: ${errorMessage}`
     );
   }
 
-  // Save authentication state (cookies and storage)
+  // Save authentication state for user 1
   await page.context().storageState({ path: authFile });
+
+  // Authenticate user 2
+  const user2 = getTestUser2();
+
+  try {
+    // Try to login first
+    let response = await api.loginWithEmail(
+      user2.email,
+      user2.password,
+      page.request
+    );
+
+    // If login fails, try to create the user
+    if (!response.success) { 
+      const signupResponse = await api.signupWithEmail(
+        'Test2',
+        'User2',
+        user2.email,
+        user2.password,
+        page.request
+      );
+
+      if (!signupResponse.success) {
+        throw new Error(`Failed to create test user 2: ${signupResponse.error || 'Unknown error'}`);
+      }
+    } 
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+    throw new Error(
+      `Authentication failed for user 2. \n Error: ${errorMessage}`
+    );
+  }
+
+  // Save authentication state for user 2
+  await page.context().storageState({ path: authFile2 });
 });
