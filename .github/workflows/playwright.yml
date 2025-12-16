@@ -40,6 +40,11 @@ jobs:
     - name: Install frontend dependencies
       run: npm ci
     
+    # Build frontend
+    - name: Build frontend
+      run: npm run build
+      working-directory: ./app
+    
     # Start Docker Compose services (test databases)
     - name: Start test databases
       run: |
@@ -58,11 +63,11 @@ jobs:
         sleep 5
         docker ps -a
     
-    # Start the FastAPI application with frontend build
+    # Start the FastAPI application
     - name: Start FastAPI application
       run: |
-        # Build frontend and start server in background using Make
-        make run-prod > /tmp/uvicorn.log 2>&1 &
+        # Start server in background directly with pipenv
+        pipenv run uvicorn api.index:app --host localhost --port 5000 > /tmp/uvicorn.log 2>&1 &
         UVICORN_PID=$!
         echo "Started server with PID: $UVICORN_PID"
         # Wait for app to start
@@ -82,8 +87,6 @@ jobs:
           fi
         done
       env:
-        HOST: localhost
-        PORT: 5000
         PYTHONUNBUFFERED: 1
         FASTAPI_SECRET_KEY: test-secret-key-for-ci
         APP_ENV: development
