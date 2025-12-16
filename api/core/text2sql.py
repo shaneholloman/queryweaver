@@ -333,7 +333,7 @@ async def query_database(user_id: str, graph_id: str, chat_data: ChatRequest):  
                 }
             ) + MESSAGE_DELIMITER
 
-            # If the SQL query is valid, execute it using the postgres database db_url
+            # If the SQL query is valid, execute it using the configured database and db_url
             if answer_an["is_sql_translatable"]:
                 # Auto-quote table names with special characters (like dashes)
                 # Extract known table names from the result schema
