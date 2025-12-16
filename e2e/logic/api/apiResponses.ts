@@ -31,9 +31,7 @@ export interface LogoutResponse {
 
 // ==================== GRAPH/DATABASE RESPONSES ====================
 
-export interface GraphsListResponse {
-  graphs: string[];
-}
+export type GraphsListResponse = string[];
 
 export interface GraphColumn {
   name: string;
@@ -84,7 +82,8 @@ export type StreamMessageType =
   | 'confirmation'
   | 'destructive_confirmation'
   | 'schema_refresh'
-  | 'status';
+  | 'status'
+  | 'final_result';
 
 export interface StreamMessage {
   type: StreamMessageType;
@@ -105,6 +104,9 @@ export interface StreamMessage {
   sql_query?: string;
   operation_type?: string;
   refresh_status?: string;
+  success?: boolean;
+  graph_id?: string;
+  graph_name?: string;
 }
 
 // ==================== TOKEN MANAGEMENT RESPONSES ====================
