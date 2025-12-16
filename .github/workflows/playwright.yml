@@ -60,7 +60,20 @@ jobs:
     - name: Start FalkorDB
       run: |
         docker run -d --name falkordb-test -p 6379:6379 falkordb/falkordb:latest
-        sleep 5
+        echo "Waiting for FalkorDB to be ready..."
+        # Wait for FalkorDB to accept connections (try for 30 seconds)
+        for i in {1..30}; do
+          if docker exec falkordb-test redis-cli PING > /dev/null 2>&1; then
+            echo "FalkorDB is ready!"
+            break
+          fi
+          echo "Waiting... attempt $i/30"
+          sleep 1
+        done
+        # Verify FalkorDB is accessible from host
+        if command -v redis-cli &> /dev/null; then
+          redis-cli -h localhost -p 6379 PING || echo "redis-cli not available, skipping host check"
+        fi
         docker ps -a
     
     # Start the FastAPI application
@@ -91,8 +104,7 @@ jobs:
         FASTAPI_SECRET_KEY: test-secret-key-for-ci
         APP_ENV: development
         FASTAPI_DEBUG: False
-        FALKORDB_HOST: localhost
-        FALKORDB_PORT: 6379
+        FALKORDB_URL: redis://localhost:6379
         DISABLE_MCP: true
     
     # Install Playwright browsers
