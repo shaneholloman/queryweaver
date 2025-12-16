@@ -65,7 +65,6 @@ def parse_response(response: str) -> Dict[str, Any]:
         json_str = response[json_start:json_end]
         analysis = json.loads(json_str)
         return analysis
-        
     except (json.JSONDecodeError, ValueError) as e:
         # Fallback if JSON parsing fails
         return {
