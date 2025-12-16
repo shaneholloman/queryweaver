@@ -36,10 +36,15 @@ jobs:
     - name: Install Python dependencies
       run: pipenv sync --dev
     
+    # Install Node dependencies (root - for Playwright)
+    - name: Install root dependencies
+      run: npm ci
+
     # Install Node dependencies (frontend)
     - name: Install frontend dependencies
       run: npm ci
-    
+      working-directory: ./app
+
     # Build frontend
     - name: Build frontend
       run: npm run build
