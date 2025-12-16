@@ -1,4 +1,5 @@
 """Graph-related routes for the text2sql API."""
+# pylint: disable=line-too-long,trailing-whitespace
 
 import asyncio
 import json

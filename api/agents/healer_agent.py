@@ -5,13 +5,14 @@ This agent focuses solely on correcting SQL queries that failed execution,
 without requiring full graph context. It uses the error message and the
 failed query to generate a corrected version.
 """
+# pylint: disable=trailing-whitespace,line-too-long,too-many-arguments
+# pylint: disable=too-many-positional-arguments,broad-exception-caught
 
-import json
 import re
-from typing import Dict, Optional
+from typing import Dict
 from litellm import completion
-from .utils import parse_response
 from api.config import Config
+from .utils import parse_response
 
 
 
