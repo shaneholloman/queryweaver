@@ -181,7 +181,7 @@ test.describe('User Profile Tests', () => {
     await browser.setPageToFullScreen();
 
     await userProfile.clickOnUserMenu();
-    await userProfile.clickOnApiTokensMenuItem();;
+    await userProfile.clickOnApiTokensMenuItem();
     await userProfile.clickOnGenerateToken();
 
     const tokenValue = await userProfile.getNewTokenValue();

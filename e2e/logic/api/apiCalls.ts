@@ -328,14 +328,16 @@ export default class ApiCalls {
    * DELETE /graphs/{graph_id}
    */
   async deleteGraph(
-    graphId: string
+    graphId: string,
+    requestContext?: APIRequestContext
   ): Promise<DeleteGraphResponse> {
     try {
       const baseUrl = getBaseUrl();
       const response = await deleteRequest(
         `${baseUrl}/graphs/${graphId}`,
         undefined,
-        undefined
+        undefined,
+        requestContext
       );
       return await response.json();
     } catch (error) {
@@ -422,14 +424,16 @@ export default class ApiCalls {
    * DELETE /tokens/{token_id}
    */
   async deleteToken(
-    tokenId: string
+    tokenId: string,
+    requestContext?: APIRequestContext
   ): Promise<DeleteTokenResponse> {
     try {
       const baseUrl = getBaseUrl();
       const response = await deleteRequest(
         `${baseUrl}/tokens/${tokenId}`,
         undefined,
-        undefined
+        undefined,
+        requestContext
       );
       return await response.json();
     } catch (error) {

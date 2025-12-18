@@ -10,8 +10,16 @@ const getRequest = async (url: string, headers?: Record<string, string>, body?: 
   };
 
   const requestContext = availableRequest || (await request.newContext());
-  const response = await requestContext.get(url, requestOptions);
-  return response;
+  const shouldDispose = !availableRequest;
+  
+  try {
+    const response = await requestContext.get(url, requestOptions);
+    return response;
+  } finally {
+    if (shouldDispose) {
+      await requestContext.dispose();
+    }
+  }
 };
 
 const postRequest = async (url: string, body?: any, availableRequest?: APIRequestContext, headers?: Record<string, string>) => {
@@ -21,19 +29,35 @@ const postRequest = async (url: string, body?: any, availableRequest?: APIReques
   };
 
   const requestContext = availableRequest || (await request.newContext());
-  const response = await requestContext.post(url, requestOptions);
-  return response;
+  const shouldDispose = !availableRequest;
+  
+  try {
+    const response = await requestContext.post(url, requestOptions);
+    return response;
+  } finally {
+    if (shouldDispose) {
+      await requestContext.dispose();
+    }
+  }
 };
 
-const deleteRequest = async (url: string, headers?: Record<string, string>, body?: any) => {
+const deleteRequest = async (url: string, headers?: Record<string, string>, body?: any, availableRequest?: APIRequestContext) => {
   const requestOptions = {
     data: body,
     headers: headers || undefined,
   };
 
-  const requestContext = await request.newContext();
-  const response = await requestContext.delete(url, requestOptions);
-  return response;
+  const requestContext = availableRequest || (await request.newContext());
+  const shouldDispose = !availableRequest;
+  
+  try {
+    const response = await requestContext.delete(url, requestOptions);
+    return response;
+  } finally {
+    if (shouldDispose) {
+      await requestContext.dispose();
+    }
+  }
 };
 
 const patchRequest = async (url: string, body?: any, availableRequest?: APIRequestContext, headers?: Record<string, string>) => {
@@ -43,8 +67,16 @@ const patchRequest = async (url: string, body?: any, availableRequest?: APIReque
   };
 
   const requestContext = availableRequest || (await request.newContext());
-  const response = await requestContext.patch(url, requestOptions);
-  return response;
+  const shouldDispose = !availableRequest;
+  
+  try {
+    const response = await requestContext.patch(url, requestOptions);
+    return response;
+  } finally {
+    if (shouldDispose) {
+      await requestContext.dispose();
+    }
+  }
 };
 
 export { getRequest, deleteRequest, postRequest, patchRequest }

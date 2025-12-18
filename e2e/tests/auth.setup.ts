@@ -1,6 +1,5 @@
 import { test as setup } from '@playwright/test';
 import apiCalls from '../logic/api/apiCalls';
-import signupWithEmail from '../logic/api/apiCalls';
 import { getTestUser, getTestUser2, getTestUser3 } from '../config/urls';
 
 const authFile = 'e2e/.auth/user.json';
