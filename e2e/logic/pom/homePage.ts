@@ -1,6 +1,8 @@
 import { Locator, Page } from "@playwright/test";
 import { waitForElementToBeVisible, waitForElementToBeEnabled } from "../../infra/utils";
 import BasePage from "../../infra/ui/basePage";
+import ApiCalls from "../api/apiCalls";
+import { getTestDatabases } from "../../config/urls";
 
 export class HomePage extends BasePage {
   // ==================== LOCATORS ====================
@@ -75,10 +77,6 @@ export class HomePage extends BasePage {
 
   private get sendQueryBtn(): Locator {
     return this.page.getByTestId("send-query-btn");
-  }
-
-  private get chatMessagesContainer(): Locator {
-    return this.page.getByTestId("chat-messages-container");
   }
 
   // Chat Messages
@@ -204,6 +202,24 @@ export class HomePage extends BasePage {
     return this.page.getByTestId(`delete-token-btn-${tokenId}`);
   }
 
+  // Toast Elements
+  private get toastNotification(): Locator {
+    return this.page.getByTestId("toast-notification");
+  }
+
+  private get toastTitle(): Locator {
+    return this.page.getByTestId("toast-title");
+  }
+
+  private get toastDescription(): Locator {
+    return this.page.getByTestId("toast-description");
+  }
+
+  // Processing Indicator
+  private get processingQueryIndicator(): Locator {
+    return this.page.getByTestId("processing-query-indicator");
+  }
+
   // ==================== LAYER 2: INTERACT WHEN VISIBLE ====================
 
   // Header Elements - InteractWhenVisible
@@ -316,12 +332,6 @@ export class HomePage extends BasePage {
     const isEnabled = await waitForElementToBeEnabled(this.sendQueryBtn);
     if (!isEnabled) throw new Error("Send query button is not enabled!");
     return this.sendQueryBtn;
-  }
-
-  private async interactWithChatMessagesContainer(): Promise<Locator> {
-    const isVisible = await waitForElementToBeVisible(this.chatMessagesContainer);
-    if (!isVisible) throw new Error("Chat messages container is not visible!");
-    return this.chatMessagesContainer;
   }
 
   // Chat Messages - InteractWhenVisible
@@ -738,15 +748,51 @@ export class HomePage extends BasePage {
   }
 
   async waitForQueryResults(): Promise<boolean> {
-    return await waitForElementToBeVisible(this.queryResultsMessage, 1000, 30);
+    try {
+      // Wait for at least one query results message to appear (using count to avoid strict mode violation)
+      await this.page.waitForFunction(
+        () => {
+          const messages = document.querySelectorAll('[data-testid="query-results-message"]');
+          return messages.length > 0;
+        },
+        { timeout: 30000 }
+      );
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async waitForSQLQuery(): Promise<boolean> {
-    return await waitForElementToBeVisible(this.sqlQueryMessage, 1000, 30);
+    try {
+      // Wait for at least one SQL query message to appear (using count to avoid strict mode violation)
+      await this.page.waitForFunction(
+        () => {
+          const messages = document.querySelectorAll('[data-testid="sql-query-message"]');
+          return messages.length > 0;
+        },
+        { timeout: 30000 }
+      );
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async waitForAIResponse(): Promise<boolean> {
-    return await waitForElementToBeVisible(this.aiMessage, 1000, 30);
+    try {
+      // Wait for at least one AI message to appear (using count to avoid strict mode violation)
+      await this.page.waitForFunction(
+        () => {
+          const messages = document.querySelectorAll('[data-testid="ai-message"]');
+          return messages.length > 0;
+        },
+        { timeout: 30000 }
+      );
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async isDatabaseInList(databaseId: string): Promise<boolean> {
@@ -773,7 +819,293 @@ export class HomePage extends BasePage {
     }
   }
 
+  async getDatabaseStatusBadgeText(): Promise<string> {
+    try {
+      const badge = await this.databaseStatusBadge;
+      return await badge.textContent() || '';
+    } catch {
+      return '';
+    }
+  }
+
   async wait(milliseconds: number): Promise<void> {
     await this.page.waitForTimeout(milliseconds);
+  }
+
+  // ==================== CHAT-SPECIFIC VERIFICATION METHODS ====================
+
+  /**
+   * Check if query textarea is disabled
+   */
+  async isQueryTextareaDisabled(): Promise<boolean> {
+    try {
+      return await this.queryTextarea.isDisabled();
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Check if send query button is disabled
+   */
+  async isSendQueryButtonDisabled(): Promise<boolean> {
+    try {
+      return await this.sendQueryBtn.isDisabled();
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Check if SQL query message is visible (without waiting)
+   */
+  async isSQLQueryMessageVisible(): Promise<boolean> {
+    try {
+      const count = await this.sqlQueryMessage.count();
+      return count > 0;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Check if query results message is visible (without waiting)
+   */
+  async isQueryResultsMessageVisible(): Promise<boolean> {
+    try {
+      const count = await this.queryResultsMessage.count();
+      return count > 0;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Check if AI message is visible (without waiting)
+   */
+  async isAIMessageVisible(): Promise<boolean> {
+    try {
+      const count = await this.aiMessage.count();
+      return count > 0;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get the number of rows in the results table
+   */
+  async getResultsTableRowCount(): Promise<number> {
+    try {
+      const table = await this.interactWithResultsTable();
+      const tbody = table.locator('tbody');
+      const rows = await tbody.locator('tr').count();
+      return rows;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * Verify SQL query message contains specific text
+   */
+  async verifySQLQueryContains(expectedText: string): Promise<boolean> {
+    try {
+      const sqlMessage = await this.interactWithSqlQueryMessage();
+      const content = await sqlMessage.textContent();
+      return content?.includes(expectedText) || false;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get text content of the last AI message
+   */
+  async getLastAIMessageText(): Promise<string> {
+    try {
+      const aiMessages = await this.aiMessage.all();
+      if (aiMessages.length === 0) return '';
+      const lastMessage = aiMessages[aiMessages.length - 1];
+      return await lastMessage.textContent() || '';
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Get count of all messages in chat container
+   * Useful for verifying message sequence
+   */
+  async getMessageCount(): Promise<number> {
+    try {
+      // Count all message types using their specific locators
+      const userCount = await this.userMessage.count();
+      const aiCount = await this.aiMessage.count();
+      const sqlCount = await this.sqlQueryMessage.count();
+      const resultsCount = await this.queryResultsMessage.count();
+
+      return userCount + aiCount + sqlCount + resultsCount;
+    } catch {
+      return 0;
+    }
+  }
+
+  async getAIMessageCount(): Promise<number> {
+    try {
+      return await this.aiMessage.count();
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * Wait for AI message to appear (for off-topic/follow-up responses)
+   * Uses longer timeout than existing methods since AI responses can be slow
+   */
+  async waitForAIMessage(timeoutMs: number = 30000): Promise<boolean> {
+    return await waitForElementToBeVisible(this.aiMessage, 1000, timeoutMs / 1000);
+  }
+
+  /**
+   * Wait for the processing indicator to disappear
+   * This indicates the query has finished processing
+   */
+  async waitForProcessingToComplete(timeoutMs: number = 50000): Promise<boolean> {
+    try {
+      // Wait a brief moment for the indicator to appear
+      await this.page.waitForTimeout(500);
+
+      // Check if the indicator is visible
+      const isVisible = await this.processingQueryIndicator.isVisible().catch(() => false);
+
+      if (!isVisible) {
+        // If not visible, processing might have already completed or not started
+        return true;
+      }
+
+      await this.processingQueryIndicator.waitFor({ state: 'hidden', timeout: timeoutMs });
+      return true;
+    } catch (error) {
+      console.error('Error waiting for processing to complete:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Wait for complete query response (SQL + Results + AI response)
+   * This is the full flow for valid database queries
+   */
+  async waitForCompleteQueryResponse(): Promise<boolean> {
+    try {
+      // Wait for all three components in sequence (each has 30s timeout)
+      const sqlVisible = await this.waitForSQLQuery();
+      if (!sqlVisible) return false;
+
+      const resultsVisible = await this.waitForQueryResults();
+      if (!resultsVisible) return false;
+
+      const aiVisible = await this.waitForAIResponse();
+      return aiVisible;
+    } catch {
+      return false;
+    }
+  }
+
+  // ==================== TOAST VERIFICATION METHODS ====================
+
+  /**
+   * Check if toast notification is visible
+   */
+  async isToastVisible(): Promise<boolean> {
+    try {
+      return await this.toastNotification.isVisible();
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Wait for toast to appear
+   */
+  async waitForToast(timeoutMs: number = 5000): Promise<boolean> {
+    return await waitForElementToBeVisible(this.toastNotification, 1000, timeoutMs / 1000);
+  }
+
+  /**
+   * Get toast title text
+   */
+  async getToastTitle(): Promise<string> {
+    try {
+      return await this.toastTitle.textContent() || '';
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Get toast description text
+   */
+  async getToastDescription(): Promise<string> {
+    try {
+      return await this.toastDescription.textContent() || '';
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Verify toast contains expected title
+   */
+  async verifyToastTitle(expectedTitle: string): Promise<boolean> {
+    try {
+      const title = await this.getToastTitle();
+      return title.includes(expectedTitle);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Verify toast contains expected description
+   */
+  async verifyToastDescription(expectedDescription: string): Promise<boolean> {
+    try {
+      const description = await this.getToastDescription();
+      return description.includes(expectedDescription);
+    } catch {
+      return false;
+    }
+  }
+
+  // ==================== DATABASE CONNECTION HELPER ====================
+
+  /**
+   * Ensure database is connected
+   * Checks if database exists, if not connects to test database
+   * Returns true if connection was needed and successful, false if already connected
+   */
+  async ensureDatabaseConnected(apiCall: ApiCalls): Promise<boolean> {
+    try {
+      // Check if any databases exist (returns string[] of graph IDs)
+      const graphs = await apiCall.getGraphs();
+
+      // If we have graphs, database is already connected
+      if (graphs && graphs.length > 0) {
+        return false;
+      }
+    } catch (error) {
+      console.log('Error checking existing graphs, will attempt to connect:', error);
+    }
+
+    // No database exists, connect to test database
+    const { postgres: postgresUrl } = getTestDatabases();
+    const response = await apiCall.connectDatabase(postgresUrl);
+    await apiCall.parseStreamingResponse(response);
+
+    // Refresh the page so the frontend can fetch the updated database list
+    await this.page.reload();
+
+    return true;
   }
 }

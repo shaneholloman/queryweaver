@@ -333,7 +333,7 @@ const ChatInterface = ({ className, disabled = false, onProcessingChange }: Chat
           
           {/* Show loading indicator when processing */}
           {isProcessing && (
-            <div className="flex items-center justify-center gap-2 mt-2">
+            <div className="flex items-center justify-center gap-2 mt-2" data-testid="processing-query-indicator">
               <LoadingSpinner size="sm" />
               <span className="text-gray-400 text-sm">Processing your query...</span>
             </div>
