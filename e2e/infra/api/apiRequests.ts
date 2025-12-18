@@ -10,16 +10,8 @@ const getRequest = async (url: string, headers?: Record<string, string>, body?: 
   };
 
   const requestContext = availableRequest || (await request.newContext());
-  const shouldDispose = !availableRequest;
-  
-  try {
-    const response = await requestContext.get(url, requestOptions);
-    return response;
-  } finally {
-    if (shouldDispose) {
-      await requestContext.dispose();
-    }
-  }
+  const response = await requestContext.get(url, requestOptions);
+  return response;
 };
 
 const postRequest = async (url: string, body?: any, availableRequest?: APIRequestContext, headers?: Record<string, string>) => {
@@ -29,16 +21,8 @@ const postRequest = async (url: string, body?: any, availableRequest?: APIReques
   };
 
   const requestContext = availableRequest || (await request.newContext());
-  const shouldDispose = !availableRequest;
-  
-  try {
-    const response = await requestContext.post(url, requestOptions);
-    return response;
-  } finally {
-    if (shouldDispose) {
-      await requestContext.dispose();
-    }
-  }
+  const response = await requestContext.post(url, requestOptions);
+  return response;
 };
 
 const deleteRequest = async (url: string, headers?: Record<string, string>, body?: any, availableRequest?: APIRequestContext) => {
@@ -48,16 +32,8 @@ const deleteRequest = async (url: string, headers?: Record<string, string>, body
   };
 
   const requestContext = availableRequest || (await request.newContext());
-  const shouldDispose = !availableRequest;
-  
-  try {
-    const response = await requestContext.delete(url, requestOptions);
-    return response;
-  } finally {
-    if (shouldDispose) {
-      await requestContext.dispose();
-    }
-  }
+  const response = await requestContext.delete(url, requestOptions);
+  return response;
 };
 
 const patchRequest = async (url: string, body?: any, availableRequest?: APIRequestContext, headers?: Record<string, string>) => {
@@ -67,16 +43,8 @@ const patchRequest = async (url: string, body?: any, availableRequest?: APIReque
   };
 
   const requestContext = availableRequest || (await request.newContext());
-  const shouldDispose = !availableRequest;
-  
-  try {
-    const response = await requestContext.patch(url, requestOptions);
-    return response;
-  } finally {
-    if (shouldDispose) {
-      await requestContext.dispose();
-    }
-  }
+  const response = await requestContext.patch(url, requestOptions);
+  return response;
 };
 
 export { getRequest, deleteRequest, postRequest, patchRequest }
