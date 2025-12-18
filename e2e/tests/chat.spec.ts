@@ -147,9 +147,6 @@ test.describe('Chat Feature Tests', () => {
     // Ensure database is connected (will skip if already connected)
     await homePage.ensureDatabaseConnected(apiCall);
 
-    // Get initial message count
-    const initialCount = await homePage.getMessageCount();
-
     // Verify send button is disabled with empty input
     const isSendButtonDisabled = await homePage.isSendQueryButtonDisabled();
     expect(isSendButtonDisabled).toBeTruthy();

@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Bot, ArrowRight, Database, Search, Code, MessageSquare, AlertTriangle } from 'lucide-react';
+import { Database, Search, Code, MessageSquare, AlertTriangle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
