@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Trash2, Star, RefreshCw, PanelLeft } from "lucide-react";
 import Sidebar from "@/components/layout/Sidebar";
-import Header from "@/components/layout/Header";
 import ChatInterface from "@/components/chat/ChatInterface";
 import LoginModal from "@/components/modals/LoginModal";
 import DatabaseModal from "@/components/modals/DatabaseModal";
