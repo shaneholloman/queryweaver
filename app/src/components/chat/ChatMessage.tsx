@@ -37,8 +37,8 @@ interface ChatMessageProps {
 
 const ChatMessage = ({ type, content, steps, queryData, analysisInfo, confirmationData, progress, user, onConfirm, onCancel }: ChatMessageProps) => {
   if (type === 'confirmation') {
-    const isHighRisk = confirmationData && ['DELETE', 'DROP', 'TRUNCATE'].includes(confirmationData.operationType.toUpperCase());
-    const operationType = confirmationData?.operationType || 'UNKNOWN';
+    const operationType = (confirmationData?.operationType ?? 'UNKNOWN').toUpperCase();
+    const isHighRisk = ['DELETE', 'DROP', 'TRUNCATE'].includes(operationType);
 
     return (
       <div className="px-6" data-testid="confirmation-message">
