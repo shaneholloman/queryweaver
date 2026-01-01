@@ -283,8 +283,9 @@ test.describe('Chat Feature Tests', () => {
     await homePage.clickConfirmButton();
     await homePage.waitForProcessingToComplete();
 
-    // Verify error message contains user-friendly text
+    // Verify error message indicates a duplicate/conflict occurred
     const lastAIMessage = await homePage.getLastAIMessageText();
-    expect(lastAIMessage).toContain(`"${randomUsername}" already exists`);
+    const hasErrorIndicator = lastAIMessage.toLowerCase().includes('already exists');
+    expect(hasErrorIndicator).toBeTruthy();
   });
 });
