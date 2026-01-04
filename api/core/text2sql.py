@@ -449,15 +449,17 @@ What this will do:
                             )
                         except Exception as exec_error:  # pylint: disable=broad-exception-caught
                             # Attempt healing
-                            step = {"type": "reasoning_step",
+                            step = {
+                                "type": "reasoning_step",
                                     "final_response": False,
-                                    "message": "Step 2a: SQL execution failed, attempting to heal query..."}
+                                    "message": "Step 2a: SQL execution failed, attempting to heal query..."
+                                    }
                             yield json.dumps(step) + MESSAGE_DELIMITER
 
                             healing_result = HealerAgent().heal_query(
                                 failed_sql=answer_an["sql_query"],
                                 error_message=str(exec_error),
-                                db_description=db_description[:500] if db_description else "",
+                                db_description=db_description,
                                 question=queries_history[-1],
                                 database_type=db_type
                             )
