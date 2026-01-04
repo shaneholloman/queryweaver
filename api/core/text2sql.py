@@ -821,6 +821,7 @@ async def execute_destructive_operation(  # pylint: disable=too-many-statements
 
             except Exception as e:  # pylint: disable=broad-exception-caught
                 logging.error("Error executing confirmed SQL query: %s", str(e))  # nosemgrep
+                error_message = str(e) if str(e) else "Error executing query"
 
                 # Save failed confirmed query to memory
                 save_query_task = asyncio.create_task(
@@ -841,7 +842,7 @@ async def execute_destructive_operation(  # pylint: disable=too-many-statements
                 )
 
                 yield json.dumps(
-                    {"type": "error", "message": "Error executing query"}
+                    {"type": "error", "message": error_message}
                 ) + MESSAGE_DELIMITER
         else:
             # User cancelled or provided invalid confirmation

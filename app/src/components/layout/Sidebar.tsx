@@ -3,7 +3,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Link } from 'react-router-dom';
 import {
   PanelLeft,
-  BrainCircuit,
   BookOpen,
   LifeBuoy,
   Waypoints,
