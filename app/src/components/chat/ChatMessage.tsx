@@ -64,8 +64,8 @@ const ChatMessage = ({ type, content, steps, queryData, analysisInfo, confirmati
                       This operation will perform a <span className={`font-semibold ${isHighRisk ? 'text-red-400' : 'text-yellow-400'}`}>{operationType}</span> query:
                     </p>
                     {confirmationData?.sqlQuery && (
-                      <div className="bg-gray-900 border border-gray-700 rounded p-3 overflow-x-auto">
-                        <pre className="text-sm font-mono text-gray-200">
+                      <div className="bg-gray-900 border border-gray-700 rounded p-3">
+                        <pre className="text-sm font-mono text-gray-200 whitespace-pre-wrap break-words overflow-wrap-anywhere">
                           <code className="language-sql">{confirmationData.sqlQuery}</code>
                         </pre>
                       </div>
@@ -156,8 +156,8 @@ const ChatMessage = ({ type, content, steps, queryData, analysisInfo, confirmati
               </div>
 
               {hasSQL && (
-                <div className="overflow-x-auto -mx-2 px-2">
-                  <pre className="bg-gray-900 text-gray-200 p-3 rounded text-sm mb-3 w-fit min-w-full font-mono">
+                <div className="-mx-2 px-2">
+                  <pre className="bg-gray-900 text-gray-200 p-3 rounded text-sm mb-3 font-mono whitespace-pre-wrap break-words overflow-wrap-anywhere">
                     <code className="language-sql">{content}</code>
                   </pre>
                 </div>
@@ -219,7 +219,7 @@ const ChatMessage = ({ type, content, steps, queryData, analysisInfo, confirmati
                       <thead className="sticky top-0 bg-gray-800 z-10">
                         <tr className="border-b border-gray-700">
                           {Object.keys(queryData[0]).map((column) => (
-                            <th key={column} className="text-left px-3 py-2 text-gray-300 font-semibold bg-gray-800 whitespace-nowrap">
+                            <th key={column} className="text-left px-3 py-2 text-gray-300 font-semibold bg-gray-800 break-words" style={{ maxWidth: '300px', minWidth: '100px' }}>
                               {column}
                             </th>
                           ))}
@@ -229,7 +229,7 @@ const ChatMessage = ({ type, content, steps, queryData, analysisInfo, confirmati
                         {queryData.map((row, index) => (
                           <tr key={index} className="border-b border-gray-700/50 hover:bg-gray-700/30">
                             {Object.values(row).map((value: any, cellIndex) => (
-                              <td key={cellIndex} className="px-3 py-2 text-gray-200 whitespace-nowrap">
+                              <td key={cellIndex} className="px-3 py-2 text-gray-200 break-words" style={{ maxWidth: '300px', minWidth: '100px' }}>
                                 {String(value)}
                               </td>
                             ))}
