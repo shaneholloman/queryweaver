@@ -157,13 +157,13 @@ Based on shadcn/ui Clean Slate theme with OKLch color space for perceptual unifo
 
   [data-theme="dark"] {
     /* Dark Mode Colors - OKLch */
-    --background: oklch(0.2077 0.0398 265.7549);
+    --background: oklch(0.1158 0 0);
     --foreground: oklch(0.9288 0.0126 255.5078);
 
-    --card: oklch(0.2795 0.0368 260.0310);
+    --card: oklch(0.1158 0 0);
     --card-foreground: oklch(0.9288 0.0126 255.5078);
 
-    --popover: oklch(0.2795 0.0368 260.0310);
+    --popover: oklch(0.1158 0 0);
     --popover-foreground: oklch(0.9288 0.0126 255.5078);
 
     --primary: oklch(0.6801 0.1583 276.9349);
@@ -172,10 +172,10 @@ Based on shadcn/ui Clean Slate theme with OKLch color space for perceptual unifo
     --secondary: oklch(0.3351 0.0331 260.9120);
     --secondary-foreground: oklch(0.8717 0.0093 258.3382);
 
-    --muted: oklch(0.2427 0.0381 259.9437);
+    --muted: oklch(0.1800 0 0);
     --muted-foreground: oklch(0.7137 0.0192 261.3246);
 
-    --accent: oklch(0.3729 0.0306 259.7328);
+    --accent: oklch(0.2400 0 0);
     --accent-foreground: oklch(0.8717 0.0093 258.3382);
 
     --destructive: oklch(0.6368 0.2078 25.3313);
@@ -193,7 +193,7 @@ Based on shadcn/ui Clean Slate theme with OKLch color space for perceptual unifo
     --chart-5: oklch(0.3984 0.1773 277.3662);
 
     /* Sidebar colors */
-    --sidebar: oklch(0.2795 0.0368 260.0310);
+    --sidebar: oklch(0.1158 0 0);
     --sidebar-foreground: oklch(0.9288 0.0126 255.5078);
     --sidebar-primary: oklch(0.6801 0.1583 276.9349);
     --sidebar-primary-foreground: oklch(0.2077 0.0398 265.7549);

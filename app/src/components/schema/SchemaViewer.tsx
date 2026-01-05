@@ -271,7 +271,7 @@ const SchemaViewer = ({ isOpen, onClose, onWidthChange, sidebarWidth = 64 }: Sch
     // Theme-aware colors
     const isLight = theme === 'light';
     const textColor = isLight ? '#111' : '#f5f5f5';
-    const fillColor = isLight ? '#ffffff' : '#1f2937';
+    const fillColor = isLight ? '#ffffff' : '#191919';
     const strokeColor = isLight ? '#d1d5db' : '#374151';
     const columnTextColor = isLight ? '#111' : '#e5e7eb';
     const typeTextColor = isLight ? '#6b7280' : '#9ca3af';
@@ -383,7 +383,7 @@ const SchemaViewer = ({ isOpen, onClose, onWidthChange, sidebarWidth = 64 }: Sch
 
   // Get theme-aware colors
   const getBackgroundColor = () => {
-    return theme === 'light' ? '#ffffff' : '#030712';
+    return theme === 'light' ? '#ffffff' : '#191919';
   };
 
   const getLinkColor = () => {

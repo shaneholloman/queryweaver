@@ -241,18 +241,18 @@ const DatabaseModal = ({ open, onOpenChange }: DatabaseModalProps) => {
             </Label>
             <Select onValueChange={setSelectedDatabase} value={selectedDatabase}>
               <div data-testid="database-type-select">
-                <SelectTrigger className="bg-muted border-border">
+                <SelectTrigger className="bg-muted border-border focus:ring-purple-500">
                   <SelectValue placeholder="-- Select Database --" />
                 </SelectTrigger>
               </div>
               <SelectContent className="bg-card border-border">
-                <SelectItem value="postgresql" className="hover:bg-accent" data-testid="postgresql-option">
+                <SelectItem value="postgresql" className="focus:bg-purple-500/20 focus:text-foreground" data-testid="postgresql-option">
                   <div className="flex items-center">
                     <div className="w-4 h-4 bg-blue-500 rounded-sm mr-2"></div>
                     PostgreSQL
                   </div>
                 </SelectItem>
-                <SelectItem value="mysql" className="hover:bg-accent" data-testid="mysql-option">
+                <SelectItem value="mysql" className="focus:bg-purple-500/20 focus:text-foreground" data-testid="mysql-option">
                   <div className="flex items-center">
                     <div className="w-4 h-4 bg-orange-500 rounded-sm mr-2"></div>
                     MySQL
@@ -268,7 +268,7 @@ const DatabaseModal = ({ open, onOpenChange }: DatabaseModalProps) => {
               <Button
                 type="button"
                 variant={connectionMode === 'url' ? 'default' : 'ghost'}
-                className="flex-1"
+                className={`flex-1 ${connectionMode === 'url' ? 'bg-purple-600 hover:bg-purple-700' : ''}`}
                 onClick={() => setConnectionMode('url')}
                 data-testid="connection-mode-url"
               >
@@ -277,7 +277,7 @@ const DatabaseModal = ({ open, onOpenChange }: DatabaseModalProps) => {
               <Button
                 type="button"
                 variant={connectionMode === 'manual' ? 'default' : 'ghost'}
-                className="flex-1"
+                className={`flex-1 ${connectionMode === 'manual' ? 'bg-purple-600 hover:bg-purple-700' : ''}`}
                 onClick={() => setConnectionMode('manual')}
                 data-testid="connection-mode-manual"
               >
@@ -301,7 +301,7 @@ const DatabaseModal = ({ open, onOpenChange }: DatabaseModalProps) => {
                 }
                 value={connectionUrl}
                 onChange={(e) => setConnectionUrl(e.target.value)}
-                className="bg-muted border-border font-mono text-sm"
+                className="bg-muted border-border font-mono text-sm focus-visible:ring-purple-500"
               />
               <p className="text-xs text-muted-foreground">
                 Enter your database connection string
@@ -313,57 +313,57 @@ const DatabaseModal = ({ open, onOpenChange }: DatabaseModalProps) => {
             <>
               <div className="space-y-2">
                 <Label htmlFor="host" className="text-sm font-medium">Host</Label>
-                <Input 
-                  id="host" 
+                <Input
+                  id="host"
                   placeholder="localhost"
                   value={host}
                   onChange={(e) => setHost(e.target.value)}
-                  className="bg-muted border-border"
+                  className="bg-muted border-border focus-visible:ring-purple-500"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="port" className="text-sm font-medium">Port</Label>
-                <Input 
-                  id="port" 
+                <Input
+                  id="port"
                   placeholder={selectedDatabase === "postgresql" ? "5432" : "3306"}
                   value={port}
                   onChange={(e) => setPort(e.target.value)}
-                  className="bg-muted border-border"
+                  className="bg-muted border-border focus-visible:ring-purple-500"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="database" className="text-sm font-medium">Database Name</Label>
-                <Input 
-                  id="database" 
+                <Input
+                  id="database"
                   placeholder="my_database"
                   value={database}
                   onChange={(e) => setDatabase(e.target.value)}
-                  className="bg-muted border-border"
+                  className="bg-muted border-border focus-visible:ring-purple-500"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="username" className="text-sm font-medium">Username</Label>
-                <Input 
-                  id="username" 
+                <Input
+                  id="username"
                   placeholder="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="bg-muted border-border"
+                  className="bg-muted border-border focus-visible:ring-purple-500"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
+                <Input
+                  id="password"
+                  type="password"
                   placeholder="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="bg-muted border-border"
+                  className="bg-muted border-border focus-visible:ring-purple-500"
                 />
               </div>
             </>
@@ -399,6 +399,7 @@ const DatabaseModal = ({ open, onOpenChange }: DatabaseModalProps) => {
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isConnecting}
+            className="hover:bg-purple-500/20 hover:text-foreground"
             data-testid="cancel-database-button"
           >
             Cancel
@@ -406,7 +407,7 @@ const DatabaseModal = ({ open, onOpenChange }: DatabaseModalProps) => {
           <Button
             onClick={handleConnect}
             disabled={!selectedDatabase || isConnecting}
-            className="bg-primary hover:bg-primary-dark"
+            className="bg-purple-600 hover:bg-purple-700"
             data-testid="connect-database-button"
           >
             {isConnecting ? "Connecting..." : "Connect"}
