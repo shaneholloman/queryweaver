@@ -15,7 +15,6 @@ from api.config import Config
 from .utils import parse_response
 
 
-
 class HealerAgent:
     """Agent specialized in fixing SQL syntax errors."""
     
