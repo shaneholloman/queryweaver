@@ -26,6 +26,7 @@ class HealerAgent:
             max_healing_attempts: Maximum number of healing attempts before giving up
         """
         self.max_healing_attempts = max_healing_attempts
+        self.messages = []
     
     @staticmethod
     def validate_sql_syntax(sql_query: str) -> dict:
@@ -166,7 +167,7 @@ IMPORTANT:
         
         return prompt
     
-    def heal_and_execute(
+    def heal_and_execute(  # pylint: disable=too-many-locals
         self,
         initial_sql: str,
         initial_error: str,
@@ -278,6 +279,15 @@ ERROR:
 
 Please fix this error."""
             self.messages.append({"role": "user", "content": feedback})
+        
+        # Fallback return
+        return {
+            "success": False,
+            "sql_query": initial_sql,
+            "query_results": None,
+            "attempts": self.max_healing_attempts,
+            "final_error": initial_error
+        }
         
     
     def _analyze_error(self, error_message: str, database_type: str) -> str:
