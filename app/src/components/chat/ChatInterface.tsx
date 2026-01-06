@@ -40,9 +40,11 @@ export interface ChatInterfaceProps {
   className?: string;
   disabled?: boolean; // when true, block interactions
   onProcessingChange?: (isProcessing: boolean) => void; // callback to notify parent of processing state
+  userRulesSpec?: string; // User-defined rules for SQL generation
+  useMemory?: boolean; // Whether to use memory context
 }
 
-const ChatInterface = ({ className, disabled = false, onProcessingChange }: ChatInterfaceProps) => {
+const ChatInterface = ({ className, disabled = false, onProcessingChange, userRulesSpec, useMemory = true }: ChatInterfaceProps) => {
   const { toast } = useToast();
   const { selectedGraph } = useDatabase();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -168,6 +170,8 @@ const ChatInterface = ({ className, disabled = false, onProcessingChange }: Chat
         query,
         database: selectedGraph.id,
         history: historySnapshot,
+        user_rules_spec: userRulesSpec,
+        use_memory: useMemory,
       })) {
         
         if (message.type === 'status' || message.type === 'reasoning' || message.type === 'reasoning_step') {

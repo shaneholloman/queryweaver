@@ -37,6 +37,8 @@ export interface ChatRequest {
   query: string;
   database: string;
   history?: ConversationMessage[];
+  user_rules_spec?: string;
+  use_memory?: boolean;
 }
 
 export interface ConversationMessage {

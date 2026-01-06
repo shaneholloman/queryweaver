@@ -32,6 +32,21 @@ const Index = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSchemaViewer, setShowSchemaViewer] = useState(false);
   const [showTokensModal, setShowTokensModal] = useState(false);
+  const [userRulesSpec, setUserRulesSpec] = useState(() => {
+    // Load from localStorage on init
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('queryweaver_user_rules') || '';
+    }
+    return '';
+  });
+  const [useMemory, setUseMemory] = useState(() => {
+    // Load from localStorage on init, default to true
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('queryweaver_use_memory');
+      return saved === null ? true : saved === 'true';
+    }
+    return true;
+  });
   const [isRefreshingSchema, setIsRefreshingSchema] = useState(false);
   const [isChatProcessing, setIsChatProcessing] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
@@ -610,6 +625,8 @@ const Index = () => {
             <ChatInterface
               disabled={isRefreshingSchema}
               onProcessingChange={setIsChatProcessing}
+              userRulesSpec={userRulesSpec}
+              useMemory={useMemory}
             />
           </div>
         </div>

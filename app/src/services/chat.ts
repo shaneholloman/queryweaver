@@ -37,6 +37,12 @@ export class ChatService {
           // Optional fields the backend supports:
           // result: [],  // Previous results if needed
           // instructions: ""  // Additional instructions if needed
+          ...(request.user_rules_spec && request.user_rules_spec.trim() && {
+            user_rules_spec: request.user_rules_spec.trim()
+          }),
+          ...(request.use_memory !== undefined && {
+            use_memory: request.use_memory
+          })
         }),
         credentials: 'include',
       });
