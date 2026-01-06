@@ -37,7 +37,7 @@ export interface ChatRequest {
   query: string;
   database: string;
   history?: ConversationMessage[];
-  user_rules_spec?: string;
+  use_user_rules?: boolean; // If true, backend fetches rules from database
   use_memory?: boolean;
 }
 
@@ -89,6 +89,7 @@ export interface ConfirmRequest {
   sql_query: string;      // The SQL query to execute
   confirmation: string;   // "CONFIRM" or "" (empty for cancel)
   chat: string[];         // Conversation history
+  use_user_rules?: boolean; // If true, backend fetches rules from database
 }
 
 // Upload types

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,7 @@ import { ArrowLeft, Star } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDatabase } from "@/contexts/DatabaseContext";
+import { databaseService } from "@/services/database";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,17 +26,22 @@ const Settings = () => {
   const { isAuthenticated, logout, user } = useAuth();
   const { selectedGraph } = useDatabase();
   const [githubStars, setGithubStars] = useState<string>('-');
-  const [rules, setRules] = useState(() => {
-    // Load from localStorage on init
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('queryweaver_user_rules') || '';
-    }
-    return '';
-  });
+  const [rules, setRules] = useState('');
+  const [isLoadingRules, setIsLoadingRules] = useState(true);
+  const [initialRulesLoaded, setInitialRulesLoaded] = useState(false);
+  const loadedRulesRef = useRef<string>(''); // Track the originally loaded rules
   const [useMemory, setUseMemory] = useState(() => {
     // Load from localStorage on init, default to true
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('queryweaver_use_memory');
+      return saved === null ? true : saved === 'true';
+    }
+    return true;
+  });
+  const [useRulesFromDatabase, setUseRulesFromDatabase] = useState(() => {
+    // Load from localStorage on init, default to true
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('queryweaver_use_rules_from_database');
       return saved === null ? true : saved === 'true';
     }
     return true;
@@ -55,12 +61,77 @@ const Settings = () => {
       });
   }, []);
 
-  // Auto-save to localStorage whenever rules change
+  // Fetch user rules from backend when component mounts or database changes (only if using database rules)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('queryweaver_user_rules', rules);
+    const loadRules = async () => {
+      if (!selectedGraph) {
+        setIsLoadingRules(false);
+        setInitialRulesLoaded(false);
+        loadedRulesRef.current = '';
+        return;
+      }
+      
+      // Only fetch from database if toggle is enabled
+      if (!useRulesFromDatabase) {
+        setIsLoadingRules(false);
+        setInitialRulesLoaded(true);
+        loadedRulesRef.current = rules; // Use current local rules
+        return;
+      }
+      
+      try {
+        setIsLoadingRules(true);
+        setInitialRulesLoaded(false);
+        const userRules = await databaseService.getUserRules(selectedGraph.id);
+        const rulesValue = userRules || '';
+        setRules(rulesValue);
+        loadedRulesRef.current = rulesValue; // Store the loaded value
+      } catch (error) {
+        console.error('Failed to load user rules:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load user rules from database",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingRules(false);
+        setInitialRulesLoaded(true);
+      }
+    };
+    
+    loadRules();
+  }, [selectedGraph, toast, useRulesFromDatabase]);
+
+  // Save rules to backend whenever they change (debounced) - only when using database rules
+  useEffect(() => {
+    // Don't save during initial load or if no graph selected or if not using database rules
+    if (!selectedGraph || isLoadingRules || !initialRulesLoaded || !useRulesFromDatabase) return;
+    
+    // Only save if rules actually changed from the loaded value
+    if (rules === loadedRulesRef.current) {
+      console.log('Rules unchanged, skipping save');
+      return;
     }
-  }, [rules]);
+    
+    const timeoutId = setTimeout(async () => {
+      try {
+        await databaseService.updateUserRules(selectedGraph.id, rules);
+        loadedRulesRef.current = rules; // Update the ref to the new saved value
+        console.log('User rules saved to database');
+      } catch (error) {
+        console.error('Failed to save user rules:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save user rules",
+          variant: "destructive",
+        });
+      }
+    }, 1000); // Debounce 1 second
+
+    return () => clearTimeout(timeoutId);
+  }, [rules, selectedGraph, isLoadingRules, initialRulesLoaded, useRulesFromDatabase, toast]);
+
+
 
   // Auto-save to localStorage whenever useMemory changes
   useEffect(() => {
@@ -68,6 +139,13 @@ const Settings = () => {
       localStorage.setItem('queryweaver_use_memory', String(useMemory));
     }
   }, [useMemory]);
+
+  // Auto-save to localStorage whenever useRulesFromDatabase changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('queryweaver_use_rules_from_database', String(useRulesFromDatabase));
+    }
+  }, [useRulesFromDatabase]);
 
   const handleLogout = async () => {
     try {
@@ -227,16 +305,37 @@ const Settings = () => {
               </div>
             </div>
 
-            {/* User Rules */}
-            <div className="space-y-3">
+            {/* Database Rules Toggle */}
+            <div className="bg-gray-800 p-5 rounded-lg border border-gray-700">
               <div className="flex items-center justify-between">
-                <Label htmlFor="rules" className="text-base font-semibold text-gray-200">
-                  User Rules & Specifications
-                </Label>
-                <span className="text-xs text-gray-500">
-                  {rules.length} characters
-                </span>
+                <div className="space-y-1">
+                  <Label htmlFor="use-database-rules" className="text-base font-semibold text-gray-200">
+                    Use Database Rules
+                  </Label>
+                  <p className="text-sm text-gray-400">
+                    Store rules in the database and use for all sessions. When disabled, rules are sent with each request
+                  </p>
+                </div>
+                <Switch
+                  id="use-database-rules"
+                  checked={useRulesFromDatabase}
+                  onCheckedChange={setUseRulesFromDatabase}
+                  className="data-[state=checked]:bg-purple-600"
+                />
               </div>
+            </div>
+
+            {/* User Rules - only show when database rules are enabled */}
+            {useRulesFromDatabase && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="rules" className="text-base font-semibold text-gray-200">
+                    User Rules & Specifications
+                  </Label>
+                  <span className="text-xs text-gray-500">
+                    {rules.length}/5000 characters
+                  </span>
+                </div>
               <Textarea
                 id="rules"
                 placeholder={`Example rules:
@@ -249,9 +348,11 @@ const Settings = () => {
 - Use descriptive aliases for clarity`}
                 value={rules}
                 onChange={(e) => setRules(e.target.value)}
+                maxLength={5000}
                 className="min-h-[400px] bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500 font-mono text-sm"
               />
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

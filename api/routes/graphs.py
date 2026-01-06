@@ -19,6 +19,7 @@ from api.core.text2sql import (
     query_database,
     refresh_database_schema,
 )
+from api.graph import get_user_rules, set_user_rules
 from api.auth.user_management import token_required
 from api.routes.tokens import UNAUTHORIZED_RESPONSE
 
@@ -225,3 +226,43 @@ async def delete_graph(request: Request, graph_id: str):
             content={"error": "Failed to delete database"},
             status_code=500
         )
+
+
+class UserRulesRequest(BaseModel):
+    """User rules request model."""
+    user_rules: str
+
+
+@graphs_router.get("/{graph_id}/user-rules", responses={401: UNAUTHORIZED_RESPONSE})
+@token_required
+async def get_graph_user_rules(request: Request, graph_id: str):
+    """Get user rules for the specified graph."""
+    try:
+        full_graph_id = f"{request.state.user_id}_{graph_id}"
+        user_rules = await get_user_rules(full_graph_id)
+        return JSONResponse(content={"user_rules": user_rules})
+    except GraphNotFoundError:
+        return JSONResponse(content={"error": "Database not found"}, status_code=404)
+    except Exception as e:
+        logging.error("Error getting user rules: %s", str(e))
+        return JSONResponse(content={"error": "Failed to get user rules"}, status_code=500)
+
+
+@graphs_router.put("/{graph_id}/user-rules", responses={401: UNAUTHORIZED_RESPONSE})
+@token_required
+async def update_graph_user_rules(request: Request, graph_id: str, data: UserRulesRequest):
+    """Update user rules for the specified graph."""
+    try:
+        logging.info("Received request to update user rules for graph: %s", graph_id)
+        logging.info("User rules content length: %d", len(data.user_rules))
+        full_graph_id = f"{request.state.user_id}_{graph_id}"
+        logging.info("Full graph_id: %s", full_graph_id)
+        await set_user_rules(full_graph_id, data.user_rules)
+        logging.info("User rules updated successfully for graph: %s", graph_id)
+        return JSONResponse(content={"success": True, "user_rules": data.user_rules})
+    except GraphNotFoundError:
+        logging.error("Graph not found: %s", graph_id)
+        return JSONResponse(content={"error": "Database not found"}, status_code=404)
+    except Exception as e:
+        logging.error("Error updating user rules: %s", str(e))
+        return JSONResponse(content={"error": "Failed to update user rules"}, status_code=500)

@@ -16,7 +16,7 @@ from api.agents import AnalysisAgent, RelevancyAgent, ResponseFormatterAgent, Fo
 from api.agents.healer_agent import HealerAgent
 from api.config import Config
 from api.extensions import db
-from api.graph import find, get_db_description
+from api.graph import find, get_db_description, get_user_rules
 from api.loaders.postgres_loader import PostgresLoader
 from api.loaders.mysql_loader import MySQLLoader
 from api.memory.graphiti_tool import MemoryTool
@@ -45,7 +45,7 @@ class ChatRequest(BaseModel):
     chat: list[str]
     result: list[str] | None = None
     instructions: str | None = None
-    user_rules_spec: str | None = None
+    use_user_rules: bool = True  # If True, fetch rules from database; if False, don't use rules
     use_memory: bool = True
 
 
@@ -58,6 +58,7 @@ class ConfirmRequest(BaseModel):
     sql_query: str
     confirmation: str = ""
     chat: list = []
+    use_user_rules: bool = True  # If True, fetch rules from database; if False, don't use rules
 
 
 def get_database_type_and_loader(db_url: str):
@@ -215,7 +216,7 @@ async def query_database(user_id: str, graph_id: str, chat_data: ChatRequest):  
     queries_history = chat_data.chat if hasattr(chat_data, 'chat') else None
     result_history = chat_data.result if hasattr(chat_data, 'result') else None
     instructions = chat_data.instructions if hasattr(chat_data, 'instructions') else None
-    user_rules_spec = chat_data.user_rules_spec if hasattr(chat_data, 'user_rules_spec') else None
+    use_user_rules = chat_data.use_user_rules if hasattr(chat_data, 'use_user_rules') else True
 
     if not queries_history or not isinstance(queries_history, list):
         raise InvalidArgumentError("Invalid or missing chat history")
@@ -258,6 +259,8 @@ async def query_database(user_id: str, graph_id: str, chat_data: ChatRequest):  
         yield json.dumps(step) + MESSAGE_DELIMITER
         # Ensure the database description is loaded
         db_description, db_url = await get_db_description(graph_id)
+        # Fetch user rules from database only if toggle is enabled
+        user_rules_spec = await get_user_rules(graph_id) if use_user_rules else None
 
         # Determine database type and get appropriate loader
         db_type, loader_class = get_database_type_and_loader(db_url)
@@ -725,7 +728,7 @@ async def execute_destructive_operation(  # pylint: disable=too-many-statements
         if confirmation == "CONFIRM":
             try:
                 db_description, db_url = await get_db_description(graph_id)
-
+                
                 # Determine database type and get appropriate loader
                 _, loader_class = get_database_type_and_loader(db_url)
 

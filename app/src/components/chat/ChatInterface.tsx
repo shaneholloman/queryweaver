@@ -40,11 +40,17 @@ export interface ChatInterfaceProps {
   className?: string;
   disabled?: boolean; // when true, block interactions
   onProcessingChange?: (isProcessing: boolean) => void; // callback to notify parent of processing state
-  userRulesSpec?: string; // User-defined rules for SQL generation
   useMemory?: boolean; // Whether to use memory context
+  useRulesFromDatabase?: boolean; // Whether to use rules from database (backend fetches them)
 }
 
-const ChatInterface = ({ className, disabled = false, onProcessingChange, userRulesSpec, useMemory = true }: ChatInterfaceProps) => {
+const ChatInterface = ({ 
+  className, 
+  disabled = false, 
+  onProcessingChange, 
+  useMemory = true,
+  useRulesFromDatabase = true
+}: ChatInterfaceProps) => {
   const { toast } = useToast();
   const { selectedGraph } = useDatabase();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -170,7 +176,7 @@ const ChatInterface = ({ className, disabled = false, onProcessingChange, userRu
         query,
         database: selectedGraph.id,
         history: historySnapshot,
-        user_rules_spec: userRulesSpec,
+        use_user_rules: useRulesFromDatabase, // Backend fetches from DB when true
         use_memory: useMemory,
       })) {
         
@@ -348,6 +354,7 @@ const ChatInterface = ({ className, disabled = false, onProcessingChange, userRu
           sql_query: confirmMessage.confirmationData.sqlQuery,
           confirmation: 'CONFIRM',
           chat: confirmMessage.confirmationData.chatHistory,
+          use_user_rules: useRulesFromDatabase, // Backend fetches from DB when true
         }
       )) {
         if (message.type === 'status' || message.type === 'reasoning' || message.type === 'reasoning_step') {
