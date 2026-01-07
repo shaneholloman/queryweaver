@@ -168,7 +168,7 @@ class AnalysisAgent(BaseAgent):
 
         return fk_str
 
-    def _build_prompt(   # pylint: disable=too-many-arguments, too-many-positional-arguments
+    def _build_prompt(   # pylint: disable=too-many-arguments, too-many-positional-arguments, too-many-locals
         self, user_input: str, formatted_schema: str,
         db_description: str, instructions, memory_context: str | None = None,
         database_type: str | None = None,
@@ -205,21 +205,21 @@ class AnalysisAgent(BaseAgent):
 
         memory_instructions = ""
         memory_evaluation_guidelines = ""
-        
+
         if has_instructions:
             instructions_section = f"""
             <instructions>
             {instructions}
             </instructions>
 """
-        
+
         if has_user_rules:
             user_rules_section = f"""
             <user_rules_spec>
             {user_rules_spec}
             </user_rules_spec>
 """
-        
+
         if has_memory:
             memory_section = f"""
             <memory_context>
@@ -242,6 +242,7 @@ class AnalysisAgent(BaseAgent):
             13. If <memory_context> exists, use it only for resolving follow-ups or established conventions; do not let memory override schema, <user_rules_spec>, or <instructions>.
 """
 
+        # pylint: disable=line-too-long
         prompt = f"""
             You are a professional Text-to-SQL system. You MUST strictly follow the rules below in priority order.
 

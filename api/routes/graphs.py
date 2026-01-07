@@ -245,7 +245,7 @@ async def get_graph_user_rules(request: Request, graph_id: str):
         return JSONResponse(content={"user_rules": user_rules})
     except GraphNotFoundError:
         return JSONResponse(content={"error": "Database not found"}, status_code=404)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logging.error("Error getting user rules: %s", str(e))
         return JSONResponse(content={"error": "Failed to get user rules"}, status_code=500)
 
@@ -255,7 +255,9 @@ async def get_graph_user_rules(request: Request, graph_id: str):
 async def update_graph_user_rules(request: Request, graph_id: str, data: UserRulesRequest):
     """Update user rules for the specified graph."""
     try:
-        logging.info("Received request to update user rules, content length: %d", len(data.user_rules))
+        logging.info(
+            "Received request to update user rules, content length: %d", len(data.user_rules)
+        )
         full_graph_id = _graph_name(request.state.user_id, graph_id)
         await set_user_rules(full_graph_id, data.user_rules)
         logging.info("User rules updated successfully")
@@ -263,6 +265,6 @@ async def update_graph_user_rules(request: Request, graph_id: str, data: UserRul
     except GraphNotFoundError:
         logging.error("Graph not found")
         return JSONResponse(content={"error": "Database not found"}, status_code=404)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logging.error("Error updating user rules: %s", str(e))
         return JSONResponse(content={"error": "Failed to update user rules"}, status_code=500)
