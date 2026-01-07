@@ -43,12 +43,12 @@ const Settings = () => {
     return true;
   });
   const [useRulesFromDatabase, setUseRulesFromDatabase] = useState(() => {
-    // Load from localStorage on init, default to true
+    // Load from localStorage on init, default to false
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('queryweaver_use_rules_from_database');
-      return saved === null ? true : saved === 'true';
+      return saved === null ? false : saved === 'true';
     }
-    return true;
+    return false;
   });
 
   // Fetch GitHub stars

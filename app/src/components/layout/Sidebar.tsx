@@ -134,7 +134,6 @@ const Sidebar = ({ className, onSchemaClick, isSchemaOpen, isCollapsed = false, 
             onClick={onSchemaClick}
             testId="schema-button"
           />
-          <SidebarIcon icon={Settings} label="Settings" active={isSettingsOpen} onClick={handleSettingsClick} testId="settings-button" />
         </nav>
       
       <div className="flex-1 flex items-center justify-center">
@@ -142,6 +141,7 @@ const Sidebar = ({ className, onSchemaClick, isSchemaOpen, isCollapsed = false, 
       </div>
       
       <nav className="flex flex-col items-center gap-4 px-2 py-4">
+        <SidebarIcon icon={Settings} label="Settings" active={isSettingsOpen} onClick={handleSettingsClick} testId="settings-button" />
         <SidebarIcon icon={BookOpen} label="Documentation" href="https://docs.falkordb.com/" testId="documentation-link" />
         <SidebarIcon icon={LifeBuoy} label="Support" href="https://discord.com/invite/jyUgBweNQz" testId="support-link" />
       </nav>
