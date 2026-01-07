@@ -31,7 +31,7 @@ async def load_to_graph(  # pylint: disable=too-many-arguments,too-many-position
     embedding_model = Config.EMBEDDING_MODEL
     vec_len = embedding_model.get_vector_size()
 
-    enitites = create_combined_description(entities)
+    create_combined_description(entities)
 
     try:
         # Create vector indices

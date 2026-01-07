@@ -1,10 +1,15 @@
 """Utility functions for the text2sql API."""
 import json
 from typing import Any, Dict, List
-from api.config import Config
+
 from litellm import completion, batch_completion
 
-def create_combined_description(table_info: Dict[str, Dict[str, Any]], batch_size: int = 10) -> Dict[str, Dict[str, Any]]:
+from api.config import Config
+
+
+def create_combined_description(
+    table_info: Dict[str, Dict[str, Any]], batch_size: int = 10
+) -> Dict[str, Dict[str, Any]]:
     """
     Create a combined description from a dictionary of table descriptions.
 
@@ -18,24 +23,31 @@ def create_combined_description(table_info: Dict[str, Dict[str, Any]], batch_siz
 
     messages_list = []
     table_keys = []
-    
+
     system_prompt = (
         "You are a database table description generator. "
-        "Generate ONE concise sentence starting with the table name, describing what the table stores, "
-        "using present tense. Do not add explanations."
+        "Generate ONE concise sentence starting with the table name, "
+        "describing what the table stores, using present tense. "
+        "Do not add explanations."
     )
-    
+
     user_prompt_template = (
         "Table Name: {table_name}\n"
         "Table Schema: {table_prop}\n"
         "Provide a concise description of this table."
     )
-    
+
     for table_name, table_prop in table_info.items():
-        table_prop.pop("col_descriptions") # The col_descriptions property is duplicated in the schema (columns has it)
+        # The col_descriptions property is duplicated in the schema (columns has it)
+        table_prop.pop("col_descriptions")
         messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt_template.format(table_name=table_name, table_prop=json.dumps(table_prop))},
+            {
+                "role": "user",
+                "content": user_prompt_template.format(
+                    table_name=table_name, table_prop=json.dumps(table_prop)
+                ),
+            },
         ]
 
         messages_list.append(messages)
@@ -49,7 +61,7 @@ def create_combined_description(table_info: Dict[str, Dict[str, Any]], batch_siz
             temperature=0,
             max_tokens=50,
         )
-        
+
         for offset, batch_response in enumerate(response):
             table_index = batch_start + offset
             if table_index >= len(table_keys):
@@ -58,8 +70,9 @@ def create_combined_description(table_info: Dict[str, Dict[str, Any]], batch_siz
             if isinstance(batch_response, Exception):
                 table_info[table_name]["description"] = table_name
             else:
-                table_info[table_name]["description"] = batch_response.choices[0].message["content"].strip()
-    
+                content = batch_response.choices[0].message["content"].strip()
+                table_info[table_name]["description"] = content
+
     return table_info
 
 def generate_db_description(

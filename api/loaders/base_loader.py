@@ -23,7 +23,9 @@ class BaseLoader(ABC):
 
     @staticmethod
     @abstractmethod
-    def _execute_sample_query(cursor, table_name: str, col_name: str, sample_size: int = 3) -> List[Any]:
+    def _execute_sample_query(
+        cursor, table_name: str, col_name: str, sample_size: int = 3
+    ) -> List[Any]:
         """
         Execute query to get random sample values for a column.
 
