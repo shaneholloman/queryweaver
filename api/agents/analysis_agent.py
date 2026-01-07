@@ -167,7 +167,7 @@ class AnalysisAgent(BaseAgent):
 
         return fk_str
 
-    def _build_prompt(   # pylint: disable=too-many-arguments, too-many-positional-arguments
+    def _build_prompt(   # pylint: disable=too-many-arguments, too-many-positional-arguments, disable=line-too-long
         self, user_input: str, formatted_schema: str,
         db_description: str, instructions, memory_context: str | None = None,
         database_type: str | None = None,
