@@ -180,12 +180,9 @@ const Settings = () => {
     
     if (graphId && useRulesFromDatabase && currentRules !== loadedRules && initialRulesLoaded) {
       try {
-        console.log('Saving rules before navigation...', { graphId, length: currentRules.length });
         await databaseService.updateUserRules(graphId, currentRules);
         loadedRulesRef.current = currentRules; // Update to prevent unmount from saving again
-        console.log('User rules saved successfully');
       } catch (error) {
-        console.error('Failed to save rules:', error);
         toast({
           title: "Error",
           description: "Failed to save user rules",
