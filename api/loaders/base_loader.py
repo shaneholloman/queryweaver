@@ -53,7 +53,7 @@ class BaseLoader(ABC):
             sample_size: Number of random samples to retrieve (default: 3)
 
         Returns:
-            List of sample values (raw values, not formatted), or empty list
+            List of sample values (converted to strings), or empty list
         """
         # Get sample values using database-specific implementation
         sample_values = cls._execute_sample_query(cursor, table_name, col_name, sample_size)
