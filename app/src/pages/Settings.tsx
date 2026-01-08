@@ -381,6 +381,40 @@ const Settings = () => {
                 maxLength={5000}
                 className="min-h-[400px] bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500 focus:ring-purple-500 font-mono text-sm"
               />
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRules('')}
+                  className="border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+                >
+                  Clear
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={async () => {
+                    if (selectedGraph?.id) {
+                      try {
+                        await databaseService.updateUserRules(selectedGraph.id, rules);
+                        loadedRulesRef.current = rules;
+                        toast({
+                          title: "Saved",
+                          description: "User rules saved successfully",
+                        });
+                      } catch (error) {
+                        toast({
+                          title: "Error",
+                          description: "Failed to save user rules",
+                          variant: "destructive",
+                        });
+                      }
+                    }
+                  }}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  Save
+                </Button>
+              </div>
               </div>
             )}
           </div>
