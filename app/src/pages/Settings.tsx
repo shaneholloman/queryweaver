@@ -195,7 +195,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Left Sidebar */}
       <Sidebar 
         onSchemaClick={() => {}}
@@ -208,13 +208,13 @@ const Settings = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col ml-16">
         {/* Top Header Bar */}
-        <header className="border-b border-gray-700 bg-gray-900">
+        <header className="border-b border-border bg-background">
           <div className="flex items-center justify-between p-6">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
                 <img src="/icons/queryweaver.svg" alt="QueryWeaver" style={{ height: '3rem', width: 'auto' }} />
-                <span className="text-gray-400">|</span>
-                <p className="text-sm text-gray-400">Graph-Powered Text-to-SQL</p>
+                <span className="text-muted-foreground">|</span>
+                <p className="text-sm text-muted-foreground">Graph-Powered Text-to-SQL</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -232,7 +232,7 @@ const Settings = () => {
                 href="https://github.com/FalkorDB/QueryWeaver"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors text-gray-300 hover:text-white"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                 title="View QueryWeaver on GitHub"
               >
                 <svg 
@@ -263,16 +263,16 @@ const Settings = () => {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-gray-800 border-gray-600 text-gray-200" align="end">
-                    <div className="px-3 py-2 border-b border-gray-600">
-                      <p className="text-sm font-medium text-gray-100">{user?.name}</p>
-                      <p className="text-xs text-gray-400">{user?.email}</p>
+                  <DropdownMenuContent className="bg-card border-border text-foreground" align="end">
+                    <div className="px-3 py-2 border-b border-border">
+                      <p className="text-sm font-medium text-foreground">{user?.name}</p>
+                      <p className="text-xs text-muted-foreground">{user?.email}</p>
                     </div>
-                    <DropdownMenuItem className="hover:!bg-gray-700 cursor-pointer">
+                    <DropdownMenuItem className="hover:!bg-muted cursor-pointer">
                       API Tokens
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-gray-600" />
-                    <DropdownMenuItem className="hover:!bg-gray-700 cursor-pointer" onClick={handleLogout}>
+                    <DropdownMenuSeparator className="bg-border" />
+                    <DropdownMenuItem className="hover:!bg-muted cursor-pointer" onClick={handleLogout}>
                       Logout
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -290,21 +290,21 @@ const Settings = () => {
         </header>
 
         {/* Settings Header */}
-        <div className="border-b border-gray-600 bg-gray-800 px-6 py-4">
+        <div className="border-b border-border bg-card px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleBackClick}
-                className="text-gray-400 hover:text-white hover:bg-gray-700"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>
               <div>
                 <h1 className="text-2xl font-semibold">Query Settings</h1>
-                <p className="text-sm text-gray-400 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   Define custom rules and specifications for SQL generation. Changes are saved automatically.
                 </p>
               </div>
@@ -316,13 +316,13 @@ const Settings = () => {
         <div className="flex-1 overflow-auto p-6">
           <div className="max-w-4xl mx-auto space-y-6">
             {/* Memory Toggle */}
-            <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+            <div className="bg-card border border-border rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label htmlFor="use-memory" className="text-base font-semibold text-gray-200">
+                  <Label htmlFor="use-memory" className="text-base font-semibold text-foreground">
                     Use Memory Context
                   </Label>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-muted-foreground">
                     Enable AI to remember previous interactions, preferences, and query patterns for more personalized results
                   </p>
                 </div>
@@ -336,13 +336,13 @@ const Settings = () => {
             </div>
 
             {/* Database Rules Toggle */}
-            <div className="bg-gray-800 p-5 rounded-lg border border-gray-700">
+            <div className="bg-card p-5 rounded-lg border border-border">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label htmlFor="use-database-rules" className="text-base font-semibold text-gray-200">
+                  <Label htmlFor="use-database-rules" className="text-base font-semibold text-foreground">
                     Use Database Rules
                   </Label>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-muted-foreground">
                     Store rules in the database and use for all sessions. When disabled, rules are sent with each request
                   </p>
                 </div>
@@ -359,10 +359,10 @@ const Settings = () => {
             {useRulesFromDatabase && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="rules" className="text-base font-semibold text-gray-200">
+                  <Label htmlFor="rules" className="text-base font-semibold text-foreground">
                     User Rules & Specifications
                   </Label>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-muted-foreground">
                     {rules.length}/5000 characters
                   </span>
                 </div>
@@ -379,7 +379,7 @@ const Settings = () => {
                 value={rules}
                 onChange={(e) => setRules(e.target.value)}
                 maxLength={5000}
-                className="min-h-[400px] bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500 font-mono text-sm"
+                className="min-h-[400px] bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500 focus:ring-purple-500 font-mono text-sm"
               />
               </div>
             )}
