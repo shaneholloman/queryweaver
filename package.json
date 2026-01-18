@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "preact": "^10.28.2",
     "queryweaver-app": "file:app"
   },
   "devDependencies": {
