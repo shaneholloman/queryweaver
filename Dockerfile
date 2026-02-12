@@ -19,6 +19,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     netcat-openbsd \
     git \
     build-essential \
+    curl \
+    ca-certificates \
+    gnupg \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/local/bin/python3.12 /usr/bin/python3 \
     && ln -sf /usr/local/bin/python3.12 /usr/bin/python
