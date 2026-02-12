@@ -39,11 +39,13 @@ RUN PIP_BREAK_SYSTEM_PACKAGES=1 pipenv sync --system
 
 # Install Node.js (Node 22) so we can build the frontend inside the image.
 # Use NodeSource setup script to get a recent Node version on Debian-based images.
-# Clear apt lists first to avoid stale cache issues in some CI environments (v2).
-RUN rm -rf /var/lib/apt/lists/* \
+# Remove any pre-installed nodejs first to avoid conflicts.
+RUN apt-get update \
+    && apt-get remove -y nodejs || true \
+    && rm -rf /var/lib/apt/lists/* \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get update \
-    && apt-get install -y --reinstall nodejs \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/* \
     && node --version && npm --version
 
