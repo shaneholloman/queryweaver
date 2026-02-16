@@ -66,7 +66,7 @@ COPY ./app ./app
 
 RUN npm --prefix ./app run build
 
-# Copy application code
+# Copy application code 
 COPY . .
 
 # Copy and make start.sh executable
